@@ -1,1 +1,70 @@
-node_modules
+# Node dependencies
+node_modules/
+**/node_modules/
+
+# Logs
+logs
+*.log
+*.log.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Build outputs
+build/
+**/build/
+dist/
+**/dist/
+.next/
+out/
+
+# Test coverage
+coverage/
+**/coverage/
+
+# Caches
+.cache/
+**/.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+.tsbuildinfo
+
+# Environment variables
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Editors/OS metadata
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Package managers
+.npm
+.pnpm-store
+bower_components/
+
+# Storybook
+storybook-static/
+
+# Misc
+*.swp
+*.swo
+*.orig
+
+# Hosting/platform
+.vercel/
+.netlify/
