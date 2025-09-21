@@ -37,7 +37,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 fixed w-full z-30 top-0">
+    <nav className="bg-white border-b border-gray-200 fixed w-full z-50 top-0 left-0 right-0">
       <div className="px-3 py-3 lg:px-5 lg:pl-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-start">
@@ -52,7 +52,7 @@ const Navbar = () => {
             {/* Logo */}
             <Link to="/dashboard" className="flex ml-2 md:mr-24">
               <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-primary-600">
-                Codolio
+                CodeIt
               </span>
             </Link>
           </div>

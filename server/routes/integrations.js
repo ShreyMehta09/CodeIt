@@ -36,6 +36,9 @@ router.post('/sync/:platform', auth, async (req, res) => {
       case 'codeforces':
         syncResult = await syncCodeforces(user._id, handle);
         break;
+      case 'codechef':
+        syncResult = await syncCodeChef(user._id, handle);
+        break;
       case 'github':
         syncResult = await syncGitHub(user._id, handle);
         break;
@@ -83,60 +86,132 @@ router.get('/status', auth, async (req, res) => {
   }
 });
 
+// Platform verification functions
+async function verifyPlatformProfile(platform, username, verificationCode) {
+  try {
+    switch (platform) {
+      case 'leetcode':
+        return await verifyLeetCodeProfile(username, verificationCode);
+      case 'codeforces':
+        return await verifyCodeforcesProfile(username, verificationCode);
+      case 'codechef':
+        return await verifyCodeChefProfile(username, verificationCode);
+      default:
+        return false;
+    }
+  } catch (error) {
+    console.error(`Verification error for ${platform}:`, error);
+    return false;
+  }
+}
+
+async function verifyLeetCodeProfile(username, verificationCode) {
+  try {
+    const apiUrl = process.env.CODEIT_API_URL || 'https://codeit-api.onrender.com';
+    const response = await axios.get(`${apiUrl}/api/leetcode/user/${username}`, {
+      timeout: 15000
+    });
+
+    if (!response.data) {
+      return false;
+    }
+
+    // Check if data is nested under profile or directly available
+    const userData = response.data;
+    const profile = userData.profile || userData;
+    
+    // Check summary field specifically as requested
+    const summary = profile.summary || profile.aboutMe || userData.summary || userData.aboutMe || '';
+    
+    console.log('LeetCode verification - Username:', username);
+    console.log('LeetCode verification - Summary from API:', summary);
+    console.log('LeetCode verification - Looking for code:', verificationCode);
+    console.log('LeetCode verification - Match result:', summary.includes(verificationCode));
+    
+    return summary.includes(verificationCode);
+  } catch (error) {
+    console.error('LeetCode verification error:', error);
+    return false;
+  }
+}
+
+async function verifyCodeforcesProfile(username, verificationCode) {
+  try {
+    const apiUrl = process.env.CODEIT_API_URL || 'https://codeit-api.onrender.com';
+    const response = await axios.get(`${apiUrl}/api/codeforces/user/${username}`, {
+      timeout: 15000
+    });
+
+    if (!response.data) {
+      return false;
+    }
+
+    const user = response.data;
+    // Check firstName field specifically as requested
+    const firstName = user.firstName || '';
+    
+    console.log('Codeforces verification - Username:', username);
+    console.log('Codeforces verification - FirstName from API:', firstName);
+    console.log('Codeforces verification - Looking for code:', verificationCode);
+    console.log('Codeforces verification - Match result:', firstName.includes(verificationCode));
+    
+    return firstName.includes(verificationCode);
+  } catch (error) {
+    console.error('Codeforces verification error:', error);
+    return false;
+  }
+}
+
+async function verifyCodeChefProfile(username, verificationCode) {
+  try {
+    const apiUrl = process.env.CODEIT_API_URL || 'https://codeit-api.onrender.com';
+    const response = await axios.get(`${apiUrl}/api/codechef/user/${username}`, {
+      timeout: 15000
+    });
+
+    if (!response.data) {
+      return false;
+    }
+
+    // CodeChef API returns data directly, not nested under profile
+    const userData = response.data;
+    // Check name field specifically as requested
+    const name = userData.name || '';
+    
+    console.log('CodeChef verification - Username:', username);
+    console.log('CodeChef verification - Name from API:', name);
+    console.log('CodeChef verification - Looking for code:', verificationCode);
+    console.log('CodeChef verification - Match result:', name.includes(verificationCode));
+    
+    return name.includes(verificationCode);
+  } catch (error) {
+    console.error('CodeChef verification error:', error);
+    return false;
+  }
+}
+
 // LeetCode sync function
 async function syncLeetCode(userId, handle) {
   try {
-    // LeetCode GraphQL endpoint
-    const query = `
-      query getUserProfile($username: String!) {
-        matchedUser(username: $username) {
-          username
-          submitStats: submitStatsGlobal {
-            acSubmissionNum {
-              difficulty
-              count
-              submissions
-            }
-          }
-          profile {
-            ranking
-            userAvatar
-            realName
-            aboutMe
-            school
-            websites
-            countryName
-            company
-            jobTitle
-            skillTags
-            postViewCount
-            postViewCountDiff
-            reputation
-            reputationDiff
-          }
-        }
-      }
-    `;
-
-    const response = await axios.post('https://leetcode.com/graphql', {
-      query,
-      variables: { username: handle }
+    const apiUrl = process.env.CODEIT_API_URL || 'https://codeit-api.onrender.com';
+    const response = await axios.get(`${apiUrl}/api/leetcode/user/${handle}`, {
+      timeout: 15000
     });
 
-    if (!response.data.data.matchedUser) {
+    if (!response.data) {
       throw new Error('User not found on LeetCode');
     }
 
-    const userData = response.data.data.matchedUser;
-    const stats = userData.submitStats.acSubmissionNum;
+    const userData = response.data;
+    const stats = userData.problemsSolved;
 
     // Update user stats
     const user = await User.findById(userId);
-    user.stats.solvedByPlatform.leetcode = stats.find(s => s.difficulty === 'All')?.count || 0;
-    user.stats.solvedByDifficulty.easy = stats.find(s => s.difficulty === 'Easy')?.count || 0;
-    user.stats.solvedByDifficulty.medium = stats.find(s => s.difficulty === 'Medium')?.count || 0;
-    user.stats.solvedByDifficulty.hard = stats.find(s => s.difficulty === 'Hard')?.count || 0;
-    user.stats.totalSolved = user.stats.solvedByPlatform.leetcode;
+    user.stats.solvedByPlatform.leetcode = stats?.total || 0;
+    user.stats.solvedByDifficulty.easy = stats?.easy || 0;
+    user.stats.solvedByDifficulty.medium = stats?.medium || 0;
+    user.stats.solvedByDifficulty.hard = stats?.hard || 0;
+    user.stats.totalSolved = Object.values(user.stats.solvedByPlatform).reduce((a, b) => a + b, 0);
 
     await user.save();
 
@@ -146,7 +221,7 @@ async function syncLeetCode(userId, handle) {
       easy: user.stats.solvedByDifficulty.easy,
       medium: user.stats.solvedByDifficulty.medium,
       hard: user.stats.solvedByDifficulty.hard,
-      ranking: userData.profile.ranking
+      ranking: userData.profile?.ranking || null
     };
   } catch (error) {
     throw new Error(`LeetCode sync failed: ${error.message}`);
@@ -156,48 +231,87 @@ async function syncLeetCode(userId, handle) {
 // Codeforces sync function
 async function syncCodeforces(userId, handle) {
   try {
-    // Get user info
-    const userResponse = await axios.get(`https://codeforces.com/api/user.info?handles=${handle}`);
-    
-    if (userResponse.data.status !== 'OK') {
+    const apiUrl = process.env.CODEIT_API_URL || 'https://codeit-api.onrender.com';
+    const response = await axios.get(`${apiUrl}/api/codeforces/user/${handle}`, {
+      timeout: 15000
+    });
+
+    if (!response.data) {
       throw new Error('User not found on Codeforces');
     }
 
-    const userInfo = userResponse.data.result[0];
+    const userData = response.data;
 
-    // Get user submissions
-    const submissionsResponse = await axios.get(`https://codeforces.com/api/user.status?handle=${handle}&from=1&count=10000`);
-    
-    if (submissionsResponse.data.status !== 'OK') {
-      throw new Error('Failed to fetch submissions');
-    }
-
-    const submissions = submissionsResponse.data.result;
-    const solvedProblems = new Set();
-
-    // Count solved problems
-    submissions.forEach(submission => {
-      if (submission.verdict === 'OK') {
-        solvedProblems.add(`${submission.problem.contestId}-${submission.problem.index}`);
+    // Get submissions to count solved problems
+    let solvedCount = 0;
+    try {
+      const submissionsResponse = await axios.get(`${apiUrl}/api/codeforces/user/${handle}/submissions`, {
+        timeout: 15000
+      });
+      
+      if (submissionsResponse.data && submissionsResponse.data.solvedProblems) {
+        solvedCount = submissionsResponse.data.solvedProblems;
       }
-    });
+    } catch (submissionError) {
+      console.warn('Could not fetch submissions for solved count:', submissionError.message);
+    }
 
     // Update user stats
     const user = await User.findById(userId);
-    user.stats.solvedByPlatform.codeforces = solvedProblems.size;
+    user.stats.solvedByPlatform.codeforces = solvedCount;
     user.stats.totalSolved = Object.values(user.stats.solvedByPlatform).reduce((a, b) => a + b, 0);
 
     await user.save();
 
     return {
       platform: 'codeforces',
-      totalSolved: solvedProblems.size,
-      rating: userInfo.rating || 0,
-      maxRating: userInfo.maxRating || 0,
-      rank: userInfo.rank || 'unrated'
+      totalSolved: solvedCount,
+      rating: userData.rating || 0,
+      maxRating: userData.maxRating || 0,
+      rank: userData.rank || 'unrated'
     };
   } catch (error) {
     throw new Error(`Codeforces sync failed: ${error.message}`);
+  }
+}
+
+// CodeChef sync function
+async function syncCodeChef(userId, handle) {
+  try {
+    const apiUrl = process.env.CODEIT_API_URL || 'https://codeit-api.onrender.com';
+    const response = await axios.get(`${apiUrl}/api/codechef/user/${handle}`, {
+      timeout: 15000
+    });
+
+    if (!response.data) {
+      throw new Error('User not found on CodeChef');
+    }
+
+    const userData = response.data;
+    const stats = userData.stats || {};
+
+    // Extract stats
+    const totalSolved = stats.problemsSolved || 0;
+    const rating = userData.rating || 0;
+    const maxRating = userData.maxRating || rating;
+    const stars = userData.stars || 0;
+
+    // Update user stats
+    const user = await User.findById(userId);
+    user.stats.solvedByPlatform.codechef = totalSolved;
+    user.stats.totalSolved = Object.values(user.stats.solvedByPlatform).reduce((a, b) => a + b, 0);
+
+    await user.save();
+
+    return {
+      platform: 'codechef',
+      totalSolved,
+      rating,
+      maxRating,
+      stars
+    };
+  } catch (error) {
+    throw new Error(`CodeChef sync failed: ${error.message}`);
   }
 }
 
@@ -297,6 +411,8 @@ router.post('/disconnect/:platform', auth, async (req, res) => {
       user.platforms[platform].handle = '';
       user.platforms[platform].isConnected = false;
       user.platforms[platform].lastSynced = null;
+      user.platforms[platform].verificationCode = '';
+      user.platforms[platform].verificationExpiry = null;
     }
 
     await user.save();
@@ -309,5 +425,162 @@ router.post('/disconnect/:platform', auth, async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// @route   POST /api/integrations/connect/:platform
+// @desc    Initiate platform connection with verification
+// @access  Private
+router.post('/connect/:platform', auth, async (req, res) => {
+  try {
+    const { platform } = req.params;
+    const { username } = req.body;
+
+    if (!username) {
+      return res.status(400).json({ message: 'Username is required' });
+    }
+
+    const supportedPlatforms = ['leetcode', 'codeforces', 'codechef'];
+    if (!supportedPlatforms.includes(platform)) {
+      return res.status(400).json({ message: 'Unsupported platform' });
+    }
+
+    const user = await User.findById(req.user.id);
+    
+    // Generate verification code
+    const verificationCode = 'CodeIt_' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    const verificationExpiry = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Store verification code
+    user.platforms[platform].verificationCode = verificationCode;
+    user.platforms[platform].verificationExpiry = verificationExpiry;
+    await user.save();
+
+    res.json({
+      verificationCode,
+      username,
+      platform,
+      expiresIn: 10, // minutes
+      instructions: getVerificationInstructions(platform, username, verificationCode)
+    });
+  } catch (error) {
+    console.error('Connect platform error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/integrations/verify/:platform
+// @desc    Verify platform connection
+// @access  Private
+router.post('/verify/:platform', auth, async (req, res) => {
+  try {
+    const { platform } = req.params;
+    const { username } = req.body;
+
+    if (!username) {
+      return res.status(400).json({ message: 'Username is required' });
+    }
+
+    const user = await User.findById(req.user.id);
+    const platformData = user.platforms[platform];
+
+    if (!platformData.verificationCode || !platformData.verificationExpiry) {
+      return res.status(400).json({ 
+        message: 'No verification code found. Please initiate connection first.' 
+      });
+    }
+
+    if (new Date() > platformData.verificationExpiry) {
+      return res.status(400).json({ 
+        message: 'Verification code expired. Please initiate connection again.' 
+      });
+    }
+
+    // Verify the code on the platform
+    const isVerified = await verifyPlatformProfile(platform, username, platformData.verificationCode);
+
+    if (!isVerified) {
+      return res.status(400).json({ 
+        message: 'Verification failed. Please make sure you have updated your profile with the verification code.' 
+      });
+    }
+
+    // Connection successful
+    platformData.handle = username;
+    platformData.isConnected = true;
+    platformData.verificationCode = '';
+    platformData.verificationExpiry = null;
+    platformData.lastSynced = new Date();
+
+    await user.save();
+
+    // Sync data from platform
+    let syncResult;
+    try {
+      switch (platform) {
+        case 'leetcode':
+          syncResult = await syncLeetCode(user._id, username);
+          break;
+        case 'codeforces':
+          syncResult = await syncCodeforces(user._id, username);
+          break;
+        case 'codechef':
+          syncResult = await syncCodeChef(user._id, username);
+          break;
+      }
+    } catch (syncError) {
+      console.warn('Sync error after verification:', syncError);
+      // Don't fail verification if sync fails
+    }
+
+    res.json({
+      message: `${platform} connected successfully`,
+      platform,
+      username,
+      syncResult
+    });
+  } catch (error) {
+    console.error('Verify platform error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+function getVerificationInstructions(platform, username, verificationCode) {
+  const instructions = {
+    leetcode: {
+      title: 'LeetCode Profile Verification',
+      steps: [
+        '1. Go to your LeetCode profile settings',
+        '2. Update your "Summary" section to include this code: ' + verificationCode,
+        '3. Save your profile changes',
+        '4. Click "Verify Connection" below',
+        '5. You can remove the code from your summary after verification'
+      ],
+      profileUrl: `https://leetcode.com/${username}/`
+    },
+    codeforces: {
+      title: 'Codeforces Profile Verification', 
+      steps: [
+        '1. Go to your Codeforces profile settings',
+        '2. Update your "First Name" field to include: ' + verificationCode,
+        '3. Save your profile changes',
+        '4. Click "Verify Connection" below',
+        '5. You can change your first name back after verification'
+      ],
+      profileUrl: `https://codeforces.com/profile/${username}`
+    },
+    codechef: {
+      title: 'CodeChef Profile Verification',
+      steps: [
+        '1. Go to your CodeChef profile settings',
+        '2. Update your "Name" field to include: ' + verificationCode,
+        '3. Save your profile changes', 
+        '4. Click "Verify Connection" below',
+        '5. You can change your name back after verification'
+      ],
+      profileUrl: `https://www.codechef.com/users/${username}`
+    }
+  };
+
+  return instructions[platform];
+}
 
 module.exports = router;

@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import PublicProfile from './pages/PublicProfile';
 import Settings from './pages/Settings';
 import Integrations from './pages/Integrations';
+import IntegrationTest from './pages/IntegrationTest';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import AuthSuccess from './pages/Auth/AuthSuccess';
@@ -58,6 +59,7 @@ function App() {
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="integrations" element={<Integrations />} />
+          <Route path="integration-test" element={<IntegrationTest />} />
         </Route>
 
         {/* 404 Route */}

@@ -53,27 +53,37 @@ const userSchema = new mongoose.Schema({
     leetcode: {
       handle: String,
       lastSynced: Date,
-      isConnected: { type: Boolean, default: false }
+      isConnected: { type: Boolean, default: false },
+      verificationCode: String,
+      verificationExpiry: Date
     },
     codeforces: {
       handle: String,
       lastSynced: Date,
-      isConnected: { type: Boolean, default: false }
+      isConnected: { type: Boolean, default: false },
+      verificationCode: String,
+      verificationExpiry: Date
     },
     codechef: {
       handle: String,
       lastSynced: Date,
-      isConnected: { type: Boolean, default: false }
+      isConnected: { type: Boolean, default: false },
+      verificationCode: String,
+      verificationExpiry: Date
     },
     atcoder: {
       handle: String,
       lastSynced: Date,
-      isConnected: { type: Boolean, default: false }
+      isConnected: { type: Boolean, default: false },
+      verificationCode: String,
+      verificationExpiry: Date
     },
     github: {
       handle: String,
       lastSynced: Date,
-      isConnected: { type: Boolean, default: false }
+      isConnected: { type: Boolean, default: false },
+      verificationCode: String,
+      verificationExpiry: Date
     }
   },
   
