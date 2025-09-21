@@ -6,7 +6,7 @@ const AuthLayout = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary-600 mb-2">Codolio</h1>
+          <h1 className="text-3xl font-bold text-primary-600 mb-2">CodeIt</h1>
           <p className="text-gray-600">Track your competitive programming journey</p>
         </div>
       </div>
@@ -19,7 +19,7 @@ const AuthLayout = () => {
 
       <div className="mt-8 text-center">
         <p className="text-sm text-gray-500">
-          © 2024 Codolio. Built for competitive programmers.
+          © 2025 CodeIt. Built for competitive programmers.
         </p>
       </div>
     </div>

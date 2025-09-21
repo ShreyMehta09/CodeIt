@@ -1,4 +1,4 @@
-# Codolio Clone - Competitive Programming Tracker
+# CodeIt - Competitive Programming Tracker
 
 A full-stack web application for tracking competitive programming progress across multiple platforms, built with React.js, Express.js, and Node.js.
 
@@ -66,7 +66,7 @@ A full-stack web application for tracking competitive programming progress acros
 ## Project Structure
 
 ```
-codolio-clone/
+CodeIt/
 ├── server/                 # Backend API
 │   ├── config/            # Configuration files
 │   ├── models/            # Database models
@@ -95,7 +95,7 @@ codolio-clone/
 ### 1. Clone the Repository
 ```bash
 git clone <repository-url>
-cd codolio-clone
+cd CodeIt
 ```
 
 ### 2. Install Dependencies
@@ -117,7 +117,7 @@ Create a `.env` file in the `server` directory:
 
 ```env
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/codolio-clone
+MONGODB_URI=mongodb://localhost:27017/CodeIt
 JWT_SECRET=your-super-secret-jwt-key-here
 JWT_EXPIRE=7d
 

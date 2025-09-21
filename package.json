@@ -1,5 +1,5 @@
 {
-  "name": "codolio-clone",
+  "name": "CodeIt",
   "version": "1.0.0",
   "description": "A competitive programming profile tracker and dashboard",
   "main": "server/index.js",

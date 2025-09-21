@@ -1,7 +1,7 @@
 {
-  "name": "codolio-server",
+  "name": "CodeIt-server",
   "version": "1.0.0",
-  "description": "Backend API for Codolio clone",
+  "description": "Backend API for CodeIt clone",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

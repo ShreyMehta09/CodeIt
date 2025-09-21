@@ -41,7 +41,7 @@ const Landing = () => {
     {
       name: 'Alex Chen',
       role: 'Software Engineer at Google',
-      content: 'Codolio helped me track my progress systematically and land my dream job. The analytics are incredibly detailed!',
+      content: 'CodeIt helped me track my progress systematically and land my dream job. The analytics are incredibly detailed!',
       avatar: 'https://ui-avatars.com/api/?name=Alex+Chen&background=3b82f6&color=ffffff'
     },
     {
@@ -72,7 +72,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
-              <h1 className="text-2xl font-bold text-primary-600">Codolio</h1>
+              <h1 className="text-2xl font-bold text-primary-600">CodeIt</h1>
             </div>
             <div className="flex items-center space-x-4">
               <Link
@@ -230,7 +230,7 @@ const Landing = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-lg font-semibold mb-4">Codolio</h3>
+              <h3 className="text-lg font-semibold mb-4">CodeIt</h3>
               <p className="text-gray-400">
                 The ultimate platform for competitive programming progress tracking.
               </p>
@@ -261,7 +261,7 @@ const Landing = () => {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Codolio. All rights reserved.</p>
+            <p>&copy; 2025 CodeIt. All rights reserved.</p>
           </div>
         </div>
       </footer>
