@@ -114,11 +114,30 @@ const userSchema = new mongoose.Schema({
     earnedAt: { type: Date, default: Date.now }
   }],
   
+  // Social Links
+  socialLinks: {
+    twitter: String,
+    linkedin: String,
+    github: String,
+    portfolio: String,
+    blog: String
+  },
+  
   // Settings
   settings: {
-    emailNotifications: { type: Boolean, default: true },
-    publicStats: { type: Boolean, default: true },
-    showGithub: { type: Boolean, default: true },
+    emailNotifications: {
+      general: { type: Boolean, default: true },
+      weeklyReports: { type: Boolean, default: true },
+      platformUpdates: { type: Boolean, default: true },
+      achievements: { type: Boolean, default: true },
+      reminders: { type: Boolean, default: false }
+    },
+    privacy: {
+      profileVisibility: { type: String, enum: ['public', 'private', 'friends'], default: 'public' },
+      showStats: { type: Boolean, default: true },
+      showBadges: { type: Boolean, default: true },
+      showSocialLinks: { type: Boolean, default: true }
+    },
     theme: { type: String, enum: ['light', 'dark', 'auto'], default: 'auto' }
   }
 }, {

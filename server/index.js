@@ -13,6 +13,8 @@ const problemRoutes = require('./routes/problems');
 const sheetRoutes = require('./routes/sheets');
 const integrationRoutes = require('./routes/integrations');
 const dashboardRoutes = require('./routes/dashboard');
+const settingsRoutes = require('./routes/settings');
+const profileRoutes = require('./routes/profile');
 
 // Import passport config
 require('./config/passport');
@@ -43,11 +45,68 @@ app.use(express.urlencoded({ extended: true }));
 // Passport middleware
 app.use(passport.initialize());
 
-// Connect to MongoDB
+// Request timeout middleware
+app.use((req, res, next) => {
+  const timeout = 30000; // 30 seconds
+  const timer = setTimeout(() => {
+    if (!res.headersSent) {
+      res.status(408).json({ 
+        message: 'Request timeout' 
+      });
+    }
+  }, timeout);
+  
+  res.on('finish', () => clearTimeout(timer));
+  res.on('close', () => clearTimeout(timer));
+  
+  next();
+});
+
+// Connect to MongoDB with better error handling and options
 const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/codolio-clone';
-mongoose.connect(mongoUri)
-.then(() => console.log('MongoDB connected successfully'))
-.catch(err => console.error('MongoDB connection error:', err));
+
+const mongoOptions = {
+  maxPoolSize: 10,
+  serverSelectionTimeoutMS: 5000,
+  socketTimeoutMS: 45000,
+  bufferCommands: false,
+};
+
+mongoose.connect(mongoUri, mongoOptions)
+.then(() => {
+  console.log('MongoDB connected successfully');
+  console.log(`Connected to: ${mongoUri}`);
+})
+.catch(err => {
+  console.error('MongoDB connection error:', err);
+  process.exit(1);
+});
+
+// Handle MongoDB connection events
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB error:', err);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.log('MongoDB disconnected');
+});
+
+mongoose.connection.on('reconnected', () => {
+  console.log('MongoDB reconnected');
+});
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('Received SIGINT. Graceful shutdown...');
+  try {
+    await mongoose.connection.close();
+    console.log('MongoDB connection closed.');
+    process.exit(0);
+  } catch (err) {
+    console.error('Error during shutdown:', err);
+    process.exit(1);
+  }
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -56,6 +115,8 @@ app.use('/api/problems', problemRoutes);
 app.use('/api/sheets', sheetRoutes);
 app.use('/api/integrations', integrationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/profile', profileRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -68,10 +129,38 @@ app.get('/api/health', (req, res) => {
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ 
-    message: 'Something went wrong!',
-    error: process.env.NODE_ENV === 'development' ? err.message : {}
+  console.error(`[${new Date().toISOString()}] Error on ${req.method} ${req.url}:`, err.stack);
+  
+  // Handle specific error types
+  if (err.name === 'ValidationError') {
+    return res.status(400).json({ 
+      message: 'Validation Error', 
+      errors: err.errors 
+    });
+  }
+  
+  if (err.name === 'CastError') {
+    return res.status(400).json({ 
+      message: 'Invalid ID format' 
+    });
+  }
+  
+  if (err.code === 11000) {
+    return res.status(409).json({ 
+      message: 'Duplicate entry' 
+    });
+  }
+  
+  if (err.name === 'MongooseError') {
+    return res.status(503).json({ 
+      message: 'Database connection error' 
+    });
+  }
+  
+  // Default error
+  res.status(err.status || 500).json({ 
+    message: err.message || 'Internal server error',
+    error: process.env.NODE_ENV === 'development' ? err.stack : undefined
   });
 });
 
