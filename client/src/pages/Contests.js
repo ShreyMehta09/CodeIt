@@ -24,7 +24,9 @@ const Contests = () => {
 		setLoading(true);
 		setError(null);
 		try {
-			const response = await fetch("http://localhost:8000/api/contests/upcoming");
+			const response = await fetch(
+				"http://localhost:8000/api/contests/upcoming"
+			);
 			if (!response.ok) throw new Error("Failed to fetch contests");
 			const data = await response.json();
 			setContests(data.contests);
@@ -148,7 +150,9 @@ const Contests = () => {
 					variant="outline"
 					size="sm"
 				>
-					<RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+					<RefreshCw
+						className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+					/>
 					Refresh
 				</Button>
 			</div>
@@ -210,7 +214,9 @@ const Contests = () => {
 				<div className="card">
 					<div className="card-content text-center py-12">
 						<Trophy className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-						<p className="text-gray-600 dark:text-gray-400">No contests found</p>
+						<p className="text-gray-600 dark:text-gray-400">
+							No contests found
+						</p>
 					</div>
 				</div>
 			) : (
@@ -249,7 +255,9 @@ const Contests = () => {
 											</div>
 											<div className="flex items-center gap-1">
 												<Clock className="w-4 h-4" />
-												<span>Duration: {formatDuration(contest.duration)}</span>
+												<span>
+													Duration: {formatDuration(contest.duration)}
+												</span>
 											</div>
 										</div>
 									</div>
