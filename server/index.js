@@ -15,6 +15,7 @@ const integrationRoutes = require('./routes/integrations');
 const dashboardRoutes = require('./routes/dashboard');
 const settingsRoutes = require('./routes/settings');
 const profileRoutes = require('./routes/profile');
+const adminRoutes = require('./routes/admin');
 
 // Import passport config
 require('./config/passport');
@@ -117,6 +118,7 @@ app.use('/api/integrations', integrationRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/profile', profileRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

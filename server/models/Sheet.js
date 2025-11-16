@@ -25,6 +25,16 @@ const sheetSchema = new mongoose.Schema({
     default: false
   },
   
+  // Admin-created sheets (visible to all users)
+  isGlobal: {
+    type: Boolean,
+    default: false
+  },
+  createdByAdmin: {
+    type: Boolean,
+    default: false
+  },
+  
   // Problems in the sheet
   problems: [{
     problemId: {

@@ -62,8 +62,8 @@ const Sidebar = () => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 lg:translate-x-0">
-        <div className="h-full px-3 pb-4 overflow-y-auto bg-white">
+      <aside className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 lg:translate-x-0">
+        <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
           {/* Navigation */}
           <ul className="space-y-2 font-medium">
             {navigation.map((item) => {
@@ -74,8 +74,8 @@ const Sidebar = () => {
                     to={item.href}
                     className={({ isActive }) =>
                       cn(
-                        'flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group transition-colors',
-                        isActive && 'bg-primary-50 text-primary-700 hover:bg-primary-100'
+                        'flex items-center p-2 text-gray-900 dark:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 group transition-colors',
+                        isActive && 'bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 hover:bg-primary-100 dark:hover:bg-primary-900/50'
                       )
                     }
                   >

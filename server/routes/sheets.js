@@ -42,6 +42,43 @@ router.get('/', auth, async (req, res) => {
   }
 });
 
+// @route   GET /api/sheets/global
+// @desc    Get global sheets (admin/teacher created)
+// @access  Private
+router.get('/global', auth, async (req, res) => {
+  try {
+    const { page = 1, limit = 20, category, search } = req.query;
+
+    const filter = { isGlobal: true };
+    
+    if (category) filter.category = category;
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { description: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const sheets = await Sheet.find(filter)
+      .populate('userId', 'name username')
+      .sort({ updatedAt: -1 })
+      .limit(limit * 1)
+      .skip((page - 1) * limit);
+
+    const total = await Sheet.countDocuments(filter);
+
+    res.json({
+      sheets,
+      totalPages: Math.ceil(total / limit),
+      currentPage: page,
+      total
+    });
+  } catch (error) {
+    console.error('Get global sheets error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // @route   POST /api/sheets
 // @desc    Create a new sheet
 // @access  Private

@@ -32,6 +32,16 @@ const problemSchema = new mongoose.Schema({
     required: true
   },
   
+  // Admin-created problems (visible to all users)
+  isGlobal: {
+    type: Boolean,
+    default: false
+  },
+  createdByAdmin: {
+    type: Boolean,
+    default: false
+  },
+  
   // Status
   status: {
     type: String,

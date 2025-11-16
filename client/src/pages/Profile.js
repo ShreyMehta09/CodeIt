@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Share, Calendar, MapPin, Link as LinkIcon, RefreshCw } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import Button from '../components/UI/Button';
@@ -15,6 +15,54 @@ const Profile = () => {
   const [syncLoading, setSyncLoading] = useState(false);
   const [syncData, setSyncData] = useState(null);
   const [syncError, setSyncError] = useState(null);
+
+  // Load cached platform data on component mount
+  useEffect(() => {
+    const loadCachedData = async () => {
+      try {
+        console.log('Loading cached platform data...');
+        const response = await api.get('/profile');
+        console.log('Profile response:', response.data);
+        
+        if (response.data.cachedPlatformData && Object.keys(response.data.cachedPlatformData).length > 0) {
+          console.log('Found cached data:', response.data.cachedPlatformData);
+          // Format cached data to match sync response format
+          const formattedData = {
+            success: true,
+            platformData: response.data.cachedPlatformData,
+            totalProblems: Object.values(response.data.cachedPlatformData).reduce(
+              (sum, platform) => sum + (platform.totalSolved || 0), 0
+            ),
+            lastSyncTime: response.data.platforms?.leetcode?.lastSynced || 
+                          response.data.platforms?.codeforces?.lastSynced || 
+                          response.data.platforms?.codechef?.lastSynced || 
+                          new Date(),
+            errors: [],
+            isDemo: false,
+            summary: {
+              platformsConnected: Object.keys(response.data.cachedPlatformData).length,
+              totalProblems: Object.values(response.data.cachedPlatformData).reduce(
+                (sum, platform) => sum + (platform.totalSolved || 0), 0
+              ),
+              platformBreakdown: Object.entries(response.data.cachedPlatformData).map(([platform, data]) => ({
+                platform,
+                problems: data.totalSolved,
+                rating: data.rating
+              }))
+            }
+          };
+          setSyncData(formattedData);
+          console.log('Cached data loaded successfully');
+        } else {
+          console.log('No cached data available');
+        }
+      } catch (error) {
+        console.error('Error loading cached data:', error);
+      }
+    };
+
+    loadCachedData();
+  }, []);
 
   const handleSync = async () => {
     try {
@@ -321,24 +369,24 @@ const Profile = () => {
       )}
 
       {syncData && syncData.success && (
-        <div className="card border-green-200 bg-green-50">
+        <div className="card border-green-200 bg-green-50 dark:border-green-700 dark:bg-green-900/30">
           <div className="card-content">
-            <div className="text-green-700 font-medium">
+            <div className="text-green-700 dark:text-green-400 font-medium">
               Sync Successful! 
               {syncData.isDemo && (
-                <span className="text-blue-600 text-sm ml-2">(Demo Data)</span>
+                <span className="text-blue-600 dark:text-blue-400 text-sm ml-2">(Demo Data)</span>
               )}
-              <span className="text-green-600 text-sm ml-2">
+              <span className="text-green-600 dark:text-green-400 text-sm ml-2">
                 Total Problems: {syncData.totalProblems} | Last Sync: {new Date(syncData.lastSyncTime).toLocaleString()}
               </span>
             </div>
             {syncData.summary && (
-              <div className="text-sm text-gray-700 mt-2">
+              <div className="text-sm text-gray-700 dark:text-gray-300 mt-2">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {syncData.summary.platformBreakdown.map(platform => (
-                    <div key={platform.platform} className="bg-white p-2 rounded border">
-                      <div className="font-medium capitalize">{platform.platform}</div>
-                      <div className="text-xs text-gray-600">
+                    <div key={platform.platform} className="bg-white dark:bg-gray-700 p-2 rounded border dark:border-gray-600">
+                      <div className="font-medium capitalize dark:text-white">{platform.platform}</div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400">
                         {platform.problems} problems • Rating: {platform.rating}
                       </div>
                     </div>
@@ -347,7 +395,7 @@ const Profile = () => {
               </div>
             )}
             {syncData.isDemo && (
-              <div className="text-blue-600 text-sm mt-2 bg-blue-50 p-2 rounded">
+              <div className="text-blue-600 dark:text-blue-400 text-sm mt-2 bg-blue-50 dark:bg-blue-900/30 p-2 rounded">
                 <strong>Demo Mode:</strong> Connect your real platform accounts in Settings to see your actual data.
               </div>
             )}
@@ -433,13 +481,13 @@ const Profile = () => {
                     </div>
                   </div>
                   
-                  <div className="h-64 bg-white p-2 rounded-lg border">
+                  <div className="h-64 bg-white dark:bg-gray-800 p-2 rounded-lg border dark:border-gray-700">
                     {renderRatingGraph(data, platform)}
                   </div>
                   
                   {/* Contest History Table */}
                   {data.ratingHistory && data.ratingHistory.length > 0 && (
-                    <div className="bg-white rounded-lg border">
+                    <div className="bg-white dark:bg-gray-800 rounded-lg border dark:border-gray-700">
                       <div className="px-4 py-3 border-b bg-gray-50">
                         <h4 className="font-semibold text-sm">Recent Contests</h4>
                       </div>
@@ -497,109 +545,143 @@ const Profile = () => {
         </div>
       )}
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div className="card">
-          <div className="card-content">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-gray-900">
-                {user.stats?.totalSolved || 0}
-              </div>
-              <div className="text-sm text-gray-600">Problems Solved</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-content">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-primary-600">
-                {user.stats?.currentStreak || 0}
-              </div>
-              <div className="text-sm text-gray-600">Current Streak</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-content">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-success-600">
-                {user.stats?.maxStreak || 0}
-              </div>
-              <div className="text-sm text-gray-600">Max Streak</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="card">
-          <div className="card-content">
-            <div className="text-center">
-              <div className="text-2xl font-bold text-warning-600">
-                {user.badges?.length || 0}
-              </div>
-              <div className="text-sm text-gray-600">Badges Earned</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Difficulty Breakdown */}
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Difficulty Breakdown</h2>
+          <p className="card-description">
+            {syncData?.platformData?.leetcode ? 
+              `LeetCode problems solved by difficulty` : 
+              'Connect LeetCode to see difficulty breakdown'}
+          </p>
         </div>
         <div className="card-content">
-          <div className="grid grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="text-xl font-bold text-success-600">
-                {user.stats?.solvedByDifficulty?.easy || 0}
+          {syncData?.platformData?.leetcode ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-success-600">
+                    {syncData.platformData.leetcode.easy || 0}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Easy</div>
+                  <div className="mt-2 bg-success-100 dark:bg-success-900/30 rounded-full h-2">
+                    <div 
+                      className="bg-success-600 h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${syncData.platformData.leetcode.totalSolved > 0 
+                          ? (syncData.platformData.leetcode.easy / syncData.platformData.leetcode.totalSolved * 100) 
+                          : 0}%` 
+                      }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {syncData.platformData.leetcode.totalSolved > 0 
+                      ? Math.round(syncData.platformData.leetcode.easy / syncData.platformData.leetcode.totalSolved * 100) 
+                      : 0}%
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-warning-600">
+                    {syncData.platformData.leetcode.medium || 0}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Medium</div>
+                  <div className="mt-2 bg-warning-100 dark:bg-warning-900/30 rounded-full h-2">
+                    <div 
+                      className="bg-warning-600 h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${syncData.platformData.leetcode.totalSolved > 0 
+                          ? (syncData.platformData.leetcode.medium / syncData.platformData.leetcode.totalSolved * 100) 
+                          : 0}%` 
+                      }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {syncData.platformData.leetcode.totalSolved > 0 
+                      ? Math.round(syncData.platformData.leetcode.medium / syncData.platformData.leetcode.totalSolved * 100) 
+                      : 0}%
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-danger-600">
+                    {syncData.platformData.leetcode.hard || 0}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 mt-1">Hard</div>
+                  <div className="mt-2 bg-danger-100 dark:bg-danger-900/30 rounded-full h-2">
+                    <div 
+                      className="bg-danger-600 h-2 rounded-full transition-all duration-500"
+                      style={{ 
+                        width: `${syncData.platformData.leetcode.totalSolved > 0 
+                          ? (syncData.platformData.leetcode.hard / syncData.platformData.leetcode.totalSolved * 100) 
+                          : 0}%` 
+                      }}
+                    />
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {syncData.platformData.leetcode.totalSolved > 0 
+                      ? Math.round(syncData.platformData.leetcode.hard / syncData.platformData.leetcode.totalSolved * 100) 
+                      : 0}%
+                  </div>
+                </div>
               </div>
-              <div className="text-sm text-gray-600">Easy</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-warning-600">
-                {user.stats?.solvedByDifficulty?.medium || 0}
+              <div className="border-t dark:border-gray-700 pt-4 mt-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                  <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="text-gray-600 dark:text-gray-400">Total Solved</div>
+                    <div className="text-xl font-bold text-gray-900 dark:text-white mt-1">
+                      {syncData.platformData.leetcode.totalSolved}
+                    </div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="text-gray-600 dark:text-gray-400">Contest Rating</div>
+                    <div className="text-xl font-bold text-orange-600 dark:text-orange-400 mt-1">
+                      {syncData.platformData.leetcode.rating || 'N/A'}
+                    </div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="text-gray-600 dark:text-gray-400">Global Ranking</div>
+                    <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mt-1">
+                      {syncData.platformData.leetcode.globalRanking ? 
+                        `#${syncData.platformData.leetcode.globalRanking.toLocaleString()}` : 
+                        syncData.platformData.leetcode.ranking ? 
+                        `#${syncData.platformData.leetcode.ranking.toLocaleString()}` : 'N/A'}
+                    </div>
+                  </div>
+                  <div className="text-center p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <div className="text-gray-600 dark:text-gray-400">Contests</div>
+                    <div className="text-xl font-bold text-purple-600 dark:text-purple-400 mt-1">
+                      {syncData.platformData.leetcode.attendedContests || 0}
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="text-sm text-gray-600">Medium</div>
             </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-danger-600">
-                {user.stats?.solvedByDifficulty?.hard || 0}
+          ) : (
+            <div className="grid grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="text-xl font-bold text-success-600">
+                  {user.stats?.solvedByDifficulty?.easy || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Easy</div>
               </div>
-              <div className="text-sm text-gray-600">Hard</div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-warning-600">
+                  {user.stats?.solvedByDifficulty?.medium || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Medium</div>
+              </div>
+              <div className="text-center">
+                <div className="text-xl font-bold text-danger-600">
+                  {user.stats?.solvedByDifficulty?.hard || 0}
+                </div>
+                <div className="text-sm text-gray-600 dark:text-gray-400">Hard</div>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* Platform Connections */}
-      <div className="card">
-        <div className="card-header">
-          <h2 className="card-title">Platform Connections</h2>
-          <p className="card-description">Your connected coding platforms</p>
-        </div>
-        <div className="card-content">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {Object.entries(user.platforms || {}).map(([platform, data]) => (
-              <div key={platform} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <div className={`w-3 h-3 rounded-full ${data.isConnected ? 'bg-success-500' : 'bg-gray-300'}`} />
-                  <div>
-                    <div className="font-medium capitalize">{platform}</div>
-                    {data.handle && (
-                      <div className="text-sm text-gray-500">@{data.handle}</div>
-                    )}
-                  </div>
-                </div>
-                <Badge variant={data.isConnected ? 'success' : 'default'}>
-                  {data.isConnected ? 'Connected' : 'Not Connected'}
-                </Badge>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      
 
       {/* Badges */}
       {user.badges && user.badges.length > 0 && (

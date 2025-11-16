@@ -31,6 +31,13 @@ const userSchema = new mongoose.Schema({
     type: String
   },
   
+  // User Role
+  role: {
+    type: String,
+    enum: ['user', 'teacher', 'admin'],
+    default: 'user'
+  },
+  
   // Profile Settings
   isPublic: {
     type: Boolean,
@@ -55,35 +62,55 @@ const userSchema = new mongoose.Schema({
       lastSynced: Date,
       isConnected: { type: Boolean, default: false },
       verificationCode: String,
-      verificationExpiry: Date
+      verificationExpiry: Date,
+      cachedData: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
+      }
     },
     codeforces: {
       handle: String,
       lastSynced: Date,
       isConnected: { type: Boolean, default: false },
       verificationCode: String,
-      verificationExpiry: Date
+      verificationExpiry: Date,
+      cachedData: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
+      }
     },
     codechef: {
       handle: String,
       lastSynced: Date,
       isConnected: { type: Boolean, default: false },
       verificationCode: String,
-      verificationExpiry: Date
+      verificationExpiry: Date,
+      cachedData: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
+      }
     },
     atcoder: {
       handle: String,
       lastSynced: Date,
       isConnected: { type: Boolean, default: false },
       verificationCode: String,
-      verificationExpiry: Date
+      verificationExpiry: Date,
+      cachedData: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
+      }
     },
     github: {
       handle: String,
       lastSynced: Date,
       isConnected: { type: Boolean, default: false },
       verificationCode: String,
-      verificationExpiry: Date
+      verificationExpiry: Date,
+      cachedData: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
+      }
     }
   },
   

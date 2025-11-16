@@ -37,8 +37,8 @@ const Login = () => {
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Sign in to your account</h2>
-        <p className="mt-2 text-sm text-gray-600">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Sign in to your account</h2>
+        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
           Or{' '}
           <Link
             to="/auth/register"
@@ -57,22 +57,18 @@ const Login = () => {
         )}
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-            Email address
+          <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            Email or Username
           </label>
           <div className="mt-1">
             <input
               {...register('email', {
-                required: 'Email is required',
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: 'Please enter a valid email address'
-                }
+                required: 'Email or username is required'
               })}
-              type="email"
+              type="text"
               autoComplete="email"
               className="input w-full"
-              placeholder="Enter your email"
+              placeholder="Enter your email or username"
             />
             {errors.email && (
               <p className="mt-1 text-sm text-danger-600">{errors.email.message}</p>
@@ -81,7 +77,7 @@ const Login = () => {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">
             Password
           </label>
           <div className="mt-1 relative">
@@ -123,7 +119,7 @@ const Login = () => {
               type="checkbox"
               className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
             />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900 dark:text-gray-100">
               Remember me
             </label>
           </div>
@@ -152,7 +148,7 @@ const Login = () => {
               <div className="w-full border-t border-gray-300" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+              <span className="px-2 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400">Or continue with</span>
             </div>
           </div>
 

@@ -20,23 +20,30 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is authenticated on app load
   useEffect(() => {
+    console.log('AuthContext useEffect - checking authentication');
     const token = localStorage.getItem('token');
+    console.log('AuthContext - token exists:', !!token);
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       fetchUser();
     } else {
+      console.log('AuthContext - no token found, setting loading to false');
       setLoading(false);
     }
   }, []);
 
   const fetchUser = async () => {
     try {
+      console.log('AuthContext - fetching user data');
       const response = await api.get('/auth/me');
+      console.log('AuthContext - user fetched successfully:', response.data);
+      console.log('AuthContext - username:', response.data.username, 'role:', response.data.role);
       setUser(response.data);
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      console.error('AuthContext - Failed to fetch user:', error);
       logout();
     } finally {
+      console.log('AuthContext - setting loading to false');
       setLoading(false);
     }
   };
@@ -46,12 +53,17 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post('/auth/login', { email, password });
       const { token, user: userData } = response.data;
       
+      console.log('Login response - userData:', userData);
+      console.log('Login response - username:', userData.username);
+      console.log('Login response - role:', userData.role);
+      
       localStorage.setItem('token', token);
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(userData);
       
       toast.success('Login successful!');
-      navigate('/dashboard');
+      
+      // Don't navigate here - let App.js handle the redirect based on user state
       
       return { success: true };
     } catch (error) {

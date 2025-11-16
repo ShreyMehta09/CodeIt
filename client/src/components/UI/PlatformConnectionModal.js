@@ -103,18 +103,18 @@ const PlatformConnectionModal = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-center space-x-3">
             <span className="text-2xl">{platformInfo.icon}</span>
-            <h2 className="text-xl font-semibold text-gray-900">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Connect {platformInfo.name}
             </h2>
           </div>
           <button
             onClick={handleClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors">
           >
             <X className="w-6 h-6" />
           </button>
@@ -125,10 +125,10 @@ const PlatformConnectionModal = ({
           {step === 1 && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                   Enter your {platformInfo.name} username
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
                   We'll need to verify that you own this account by asking you to temporarily update your profile.
                 </p>
               </div>
@@ -142,7 +142,7 @@ const PlatformConnectionModal = ({
 
               <form onSubmit={handleUsernameSubmit} className="space-y-4">
                 <div>
-                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+                  <label htmlFor="username" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Username
                   </label>
                   <input
@@ -151,7 +151,7 @@ const PlatformConnectionModal = ({
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder={`Enter your ${platformInfo.name} username`}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                     disabled={loading}
                   />
                 </div>
@@ -178,28 +178,28 @@ const PlatformConnectionModal = ({
           {step === 2 && verificationData && (
             <div className="space-y-6">
               <div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                   {verificationData.instructions?.title || 'Verify Your Profile'}
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-sm">
                   Follow the steps below to verify your {platformInfo.name} account.
                 </p>
               </div>
 
               {/* Verification Code */}
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="font-medium text-gray-900">Verification Code</h4>
-                    <p className="text-sm text-gray-600">Copy this code to your profile</p>
+                    <h4 className="font-medium text-gray-900 dark:text-white">Verification Code</h4>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Copy this code to your profile</p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <code className="bg-white px-3 py-1 rounded border text-sm font-mono">
+                    <code className="bg-white dark:bg-gray-700 px-3 py-1 rounded border dark:border-gray-600 text-sm font-mono dark:text-gray-200">
                       {verificationData.verificationCode}
                     </code>
                     <button
                       onClick={() => copyToClipboard(verificationData.verificationCode)}
-                      className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
+                      className="p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                       title="Copy to clipboard"
                     >
                       {copied ? (
@@ -215,14 +215,14 @@ const PlatformConnectionModal = ({
               {/* Instructions */}
               {verificationData.instructions && (
                 <div className="space-y-4">
-                  <h4 className="font-medium text-gray-900">Instructions:</h4>
+                  <h4 className="font-medium text-gray-900 dark:text-white">Instructions:</h4>
                   <ol className="space-y-2">
                     {verificationData.instructions.steps.map((step, index) => (
                       <li key={index} className="flex items-start space-x-2">
-                        <span className="flex-shrink-0 w-6 h-6 bg-primary-100 text-primary-700 rounded-full flex items-center justify-center text-sm font-medium">
+                        <span className="flex-shrink-0 w-6 h-6 bg-primary-100 dark:bg-primary-900/50 text-primary-700 dark:text-primary-400 rounded-full flex items-center justify-center text-sm font-medium">
                           {index + 1}
                         </span>
-                        <span className="text-sm text-gray-700">{step}</span>
+                        <span className="text-sm text-gray-700 dark:text-gray-300">{step}</span>
                       </li>
                     ))}
                   </ol>
@@ -244,8 +244,8 @@ const PlatformConnectionModal = ({
               )}
 
               {/* Timer */}
-              <div className="bg-amber-50 border border-amber-200 rounded-md p-3">
-                <p className="text-amber-800 text-sm">
+              <div className="bg-amber-50 dark:bg-amber-900/30 border border-amber-200 dark:border-amber-700 rounded-md p-3">
+                <p className="text-amber-800 dark:text-amber-400 text-sm">
                   ⏰ This verification code expires in {verificationData.expiresIn} minutes.
                 </p>
               </div>

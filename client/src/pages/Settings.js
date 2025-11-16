@@ -48,6 +48,21 @@ const Settings = () => {
     showSocialLinks: true
   });
 
+  // Admin test function
+  const setAdminRole = async () => {
+    try {
+      setSaving(prev => ({ ...prev, admin: true }));
+      const response = await api.post('/auth/set-admin');
+      console.log('Admin role set:', response.data);
+      alert('Admin role set successfully! Please refresh the page.');
+    } catch (error) {
+      console.error('Error setting admin role:', error);
+      alert('Error setting admin role: ' + (error.response?.data?.message || error.message));
+    } finally {
+      setSaving(prev => ({ ...prev, admin: false }));
+    }
+  };
+
   const [themePreference, setThemePreference] = useState('auto');
 
   // Load settings on component mount
@@ -380,7 +395,8 @@ const Settings = () => {
     { id: 'social', label: 'Social Links', icon: Link },
     { id: 'privacy', label: 'Privacy', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'appearance', label: 'Appearance', icon: Palette }
+    { id: 'appearance', label: 'Appearance', icon: Palette },
+    { id: 'admin-test', label: 'Admin Test', icon: Shield }
   ];
 
   return (
@@ -763,6 +779,74 @@ const Settings = () => {
                       )}
                     </label>
                   ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'admin-test' && (
+          <div className="card">
+            <div className="card-header">
+              <h3 className="card-title">Admin Role Test</h3>
+              <p className="card-description">Test admin functionality (Development only)</p>
+            </div>
+            <div className="card-content space-y-4">
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  This is a temporary testing section to help debug admin role issues.
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Current User Info
+                  </label>
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-sm">
+                    <p><strong>Name:</strong> {user?.name || 'Not loaded'}</p>
+                    <p><strong>Email:</strong> {user?.email || 'Not loaded'}</p>
+                    <p><strong>Role:</strong> {user?.role || 'Not set'}</p>
+                    <p><strong>ID:</strong> {user?._id || 'Not loaded'}</p>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Set Admin Role
+                  </label>
+                  <Button 
+                    onClick={setAdminRole}
+                    disabled={saving.admin}
+                    className="w-full sm:w-auto"
+                  >
+                    {saving.admin ? 'Setting Admin Role...' : 'Set as Admin'}
+                  </Button>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    This will set your current user role to 'admin' for testing purposes.
+                  </p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Test Admin Access
+                  </label>
+                  <div className="space-y-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.location.href = '/admin'}
+                      className="w-full sm:w-auto mr-2"
+                    >
+                      Go to Admin Dashboard
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => window.location.reload()}
+                      className="w-full sm:w-auto"
+                    >
+                      Refresh Page
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>

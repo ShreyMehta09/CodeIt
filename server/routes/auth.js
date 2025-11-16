@@ -80,7 +80,7 @@ router.post('/register', [
 // @desc    Login user
 // @access  Public
 router.post('/login', [
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
+  body('email').exists().withMessage('Email or username is required'),
   body('password').exists().withMessage('Password is required')
 ], async (req, res) => {
   try {
@@ -91,8 +91,14 @@ router.post('/login', [
 
     const { email, password } = req.body;
 
-    // Find user
-    const user = await User.findOne({ email });
+    // Find user by email or username
+    let user = await User.findOne({ 
+      $or: [
+        { email: email },
+        { username: email } // Allow username in the email field
+      ]
+    });
+    
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -115,7 +121,8 @@ router.post('/login', [
         email: user.email,
         username: user.username,
         avatar: user.avatar,
-        isPublic: user.isPublic
+        isPublic: user.isPublic,
+        role: user.role
       }
     });
   } catch (error) {
@@ -156,9 +163,44 @@ router.get('/google/callback',
 router.get('/me', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
-    res.json(user);
+    console.log('Get /me - returning user:', user.email, 'with role:', user.role);
+    
+    // Ensure all required fields are included
+    const userResponse = {
+      _id: user._id,
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      username: user.username,
+      avatar: user.avatar,
+      isPublic: user.isPublic,
+      role: user.role,
+      bio: user.bio,
+      location: user.location,
+      website: user.website
+    };
+    
+    res.json(userResponse);
   } catch (error) {
     console.error('Get user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// @route   POST /api/auth/set-admin
+// @desc    Set current user as admin (for testing only)
+// @access  Private
+router.post('/set-admin', auth, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    user.role = 'admin';
+    await user.save();
+    
+    const updatedUser = await User.findById(req.user.id).select('-password');
+    console.log('Set admin - user role updated to:', updatedUser.role);
+    res.json({ message: 'Role updated to admin', user: updatedUser });
+  } catch (error) {
+    console.error('Set admin error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

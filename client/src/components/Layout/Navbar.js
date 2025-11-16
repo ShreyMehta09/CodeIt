@@ -19,6 +19,10 @@ const Navbar = () => {
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Debug: Log user data
+  console.log('Navbar - Current user:', user);
+  console.log('Navbar - User role:', user?.role);
+
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -37,21 +41,21 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-200 fixed w-full z-50 top-0 left-0 right-0">
+    <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 fixed w-full z-50 top-0 left-0 right-0">
       <div className="px-3 py-3 lg:px-5 lg:pl-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center justify-start">
             {/* Mobile menu button */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg lg:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200"
+              className="inline-flex items-center p-2 text-sm text-gray-500 dark:text-gray-400 rounded-lg lg:hidden hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600">
             >
               {showMobileMenu ? <X size={20} /> : <Menu size={20} />}
             </button>
             
             {/* Logo */}
             <Link to="/dashboard" className="flex ml-2 md:mr-24">
-              <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-primary-600">
+              <span className="self-center text-xl font-semibold sm:text-2xl whitespace-nowrap text-primary-600 dark:text-primary-400">
                 CodeIt
               </span>
             </Link>
@@ -62,20 +66,20 @@ const Navbar = () => {
             <form onSubmit={handleSearch} className="hidden md:block">
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                  <Search className="w-4 h-4 text-gray-500" />
+                  <Search className="w-4 h-4 text-gray-500 dark:text-gray-400" />
                 </div>
                 <input
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                  className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                   placeholder="Search problems..."
                 />
               </div>
             </form>
 
             {/* Notifications */}
-            <button className="p-2 text-gray-500 rounded-lg hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200">
+            <button className="p-2 text-gray-500 dark:text-gray-400 rounded-lg hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:focus:ring-gray-600">
               <Bell size={20} />
             </button>
 
@@ -94,15 +98,15 @@ const Navbar = () => {
 
               {/* Dropdown menu */}
               {showProfileMenu && (
-                <div className="absolute right-0 z-50 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
-                  <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                <div className="absolute right-0 z-50 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 ring-1 ring-black dark:ring-gray-700 ring-opacity-5">
+                  <div className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 border-b border-gray-100 dark:border-gray-700">
                     <div className="font-medium">{user?.name}</div>
-                    <div className="text-gray-500">@{user?.username}</div>
+                    <div className="text-gray-500 dark:text-gray-400">@{user?.username}</div>
                   </div>
                   
                   <Link
                     to="/profile"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     onClick={() => setShowProfileMenu(false)}
                   >
                     <User className="w-4 h-4 mr-3" />
@@ -111,16 +115,48 @@ const Navbar = () => {
                   
                   <Link
                     to="/settings"
-                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                     onClick={() => setShowProfileMenu(false)}
                   >
                     <Settings className="w-4 h-4 mr-3" />
                     Settings
                   </Link>
                   
+                  {/* Admin menu items - only for admin account */}
+                  {user?.username === 'admin' && (
+                    <>
+                      <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
+                      <Link
+                        to="/admin"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        Admin Dashboard
+                      </Link>
+                      <Link
+                        to="/admin/sheets"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        Manage Sheets
+                      </Link>
+                      <Link
+                        to="/admin/problems"
+                        className="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        onClick={() => setShowProfileMenu(false)}
+                      >
+                        <Settings className="w-4 h-4 mr-3" />
+                        Manage Problems
+                      </Link>
+                    </>
+                  )}
+                  
+                  <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
                   <button
                     onClick={handleLogout}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
                     <LogOut className="w-4 h-4 mr-3" />
                     Sign out
@@ -134,17 +170,17 @@ const Navbar = () => {
 
       {/* Mobile search */}
       {showMobileMenu && (
-        <div className="lg:hidden border-t border-gray-200 p-4">
+        <div className="lg:hidden border-t border-gray-200 dark:border-gray-700 p-4">
           <form onSubmit={handleSearch}>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                <Search className="w-4 h-4 text-gray-500" />
+                <Search className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               </div>
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md leading-5 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                 placeholder="Search problems..."
               />
             </div>

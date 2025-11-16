@@ -21,9 +21,15 @@ import Register from './pages/Auth/Register';
 import AuthSuccess from './pages/Auth/AuthSuccess';
 import Landing from './pages/Landing';
 
+// Admin Pages
+import AdminDashboard from './pages/AdminDashboard';
+import AdminSheets from './pages/AdminSheets';
+import AdminProblems from './pages/AdminProblems';
+
 // Components
 import LoadingSpinner from './components/UI/LoadingSpinner';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import AdminRoute from './components/Auth/AdminRoute';
 
 function App() {
   const { user, loading } = useAuth();
@@ -40,13 +46,31 @@ function App() {
     <div className="App">
       <Routes>
         {/* Public Routes */}
-        <Route path="/" element={user ? <Navigate to="/dashboard" /> : <Landing />} />
+        <Route path="/" element={
+          user ? (
+            (user.username === 'admin' || user.role === 'admin') 
+              ? <Navigate to="/admin" replace /> 
+              : <Navigate to="/dashboard" replace />
+          ) : <Landing />
+        } />
         <Route path="/profile/:username" element={<PublicProfile />} />
         
         {/* Auth Routes */}
         <Route path="/auth" element={<AuthLayout />}>
-          <Route path="login" element={user ? <Navigate to="/dashboard" /> : <Login />} />
-          <Route path="register" element={user ? <Navigate to="/dashboard" /> : <Register />} />
+          <Route path="login" element={
+            !user ? <Login /> : (
+              (user.username === 'admin' || user.role === 'admin')
+                ? <Navigate to="/admin" replace />
+                : <Navigate to="/dashboard" replace />
+            )
+          } />
+          <Route path="register" element={
+            !user ? <Register /> : (
+              (user.username === 'admin' || user.role === 'admin')
+                ? <Navigate to="/admin" replace />
+                : <Navigate to="/dashboard" replace />
+            )
+          } />
           <Route path="success" element={<AuthSuccess />} />
         </Route>
 
@@ -60,6 +84,13 @@ function App() {
           <Route path="settings" element={<Settings />} />
           <Route path="integrations" element={<Integrations />} />
           <Route path="integration-test" element={<IntegrationTest />} />
+        </Route>
+          
+        {/* Admin Routes - Separate protection */}
+        <Route path="/admin" element={<ProtectedRoute><AdminRoute><Layout /></AdminRoute></ProtectedRoute>}>
+          <Route index element={<AdminDashboard />} />
+          <Route path="sheets" element={<AdminSheets />} />
+          <Route path="problems" element={<AdminProblems />} />
         </Route>
 
         {/* 404 Route */}
