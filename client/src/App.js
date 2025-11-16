@@ -26,6 +26,7 @@ import Landing from "./pages/Landing";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminSheets from "./pages/AdminSheets";
 import AdminProblems from "./pages/AdminProblems";
+import AdminUsers from "./pages/AdminUsers";
 
 // Components
 import LoadingSpinner from "./components/UI/LoadingSpinner";
@@ -126,6 +127,7 @@ function App() {
 					<Route index element={<AdminDashboard />} />
 					<Route path="sheets" element={<AdminSheets />} />
 					<Route path="problems" element={<AdminProblems />} />
+					<Route path="users" element={<AdminUsers />} />
 				</Route>
 
 				{/* 404 Route */}

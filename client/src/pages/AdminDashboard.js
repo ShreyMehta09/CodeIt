@@ -12,6 +12,8 @@ import {
 	Clock,
 	CheckCircle,
 	XCircle,
+	BarChart3,
+	Activity,
 } from "lucide-react";
 import LoadingSpinner from "../components/UI/LoadingSpinner";
 import api from "../utils/api";
@@ -27,11 +29,16 @@ const AdminDashboard = () => {
 	});
 	const [pendingSheets, setPendingSheets] = useState([]);
 	const [loadingPending, setLoadingPending] = useState(true);
+	const [selectedSheets, setSelectedSheets] = useState([]);
+	const [analytics, setAnalytics] = useState(null);
+	const [serverHealth, setServerHealth] = useState(null);
 
 	useEffect(() => {
 		console.log("AdminDashboard - Fetching stats for admin user");
 		fetchAdminStats();
 		fetchPendingApprovals();
+		fetchAnalytics();
+		fetchServerHealth();
 	}, []);
 
 	const fetchAdminStats = async () => {
@@ -60,6 +67,30 @@ const AdminDashboard = () => {
 		}
 	};
 
+	const fetchAnalytics = async () => {
+		try {
+			const [userAnalytics, contentAnalytics] = await Promise.all([
+				api.get("/admin/analytics/users"),
+				api.get("/admin/analytics/content"),
+			]);
+			setAnalytics({
+				users: userAnalytics.data,
+				content: contentAnalytics.data,
+			});
+		} catch (error) {
+			console.error("Error fetching analytics:", error);
+		}
+	};
+
+	const fetchServerHealth = async () => {
+		try {
+			const response = await api.get("/admin/analytics/health");
+			setServerHealth(response.data);
+		} catch (error) {
+			console.error("Error fetching server health:", error);
+		}
+	};
+
 	const handleApprove = async (sheetId) => {
 		try {
 			await api.post(`/admin/sheets/${sheetId}/approve`);
@@ -84,6 +115,72 @@ const AdminDashboard = () => {
 		} catch (error) {
 			console.error("Error rejecting sheet:", error);
 			alert("Failed to reject sheet");
+		}
+	};
+
+	const handleBulkApprove = async () => {
+		if (selectedSheets.length === 0) {
+			alert("Please select sheets to approve");
+			return;
+		}
+
+		if (
+			!window.confirm(`Approve ${selectedSheets.length} selected sheet(s)?`)
+		) {
+			return;
+		}
+
+		try {
+			await api.post("/admin/sheets/bulk-approve", {
+				sheetIds: selectedSheets,
+			});
+			alert(`Successfully approved ${selectedSheets.length} sheet(s)!`);
+			setSelectedSheets([]);
+			fetchAdminStats();
+			fetchPendingApprovals();
+		} catch (error) {
+			console.error("Error bulk approving sheets:", error);
+			alert("Failed to bulk approve sheets");
+		}
+	};
+
+	const handleBulkReject = async () => {
+		if (selectedSheets.length === 0) {
+			alert("Please select sheets to reject");
+			return;
+		}
+
+		const reason = prompt("Please provide a reason for rejection:");
+		if (!reason) return;
+
+		try {
+			await api.post("/admin/sheets/bulk-reject", {
+				sheetIds: selectedSheets,
+				reason,
+			});
+			alert(`Successfully rejected ${selectedSheets.length} sheet(s)!`);
+			setSelectedSheets([]);
+			fetchAdminStats();
+			fetchPendingApprovals();
+		} catch (error) {
+			console.error("Error bulk rejecting sheets:", error);
+			alert("Failed to bulk reject sheets");
+		}
+	};
+
+	const toggleSheetSelection = (sheetId) => {
+		setSelectedSheets((prev) =>
+			prev.includes(sheetId)
+				? prev.filter((id) => id !== sheetId)
+				: [...prev, sheetId]
+		);
+	};
+
+	const selectAllSheets = () => {
+		if (selectedSheets.length === pendingSheets.length) {
+			setSelectedSheets([]);
+		} else {
+			setSelectedSheets(pendingSheets.map((s) => s._id));
 		}
 	};
 
@@ -178,9 +275,39 @@ const AdminDashboard = () => {
 					</div>
 				) : pendingSheets.length > 0 ? (
 					<div className="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-						<h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-							Pending Sheet Approval Requests
-						</h2>
+						<div className="flex justify-between items-center mb-4">
+							<h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+								Pending Sheet Approval Requests
+							</h2>
+							<div className="flex gap-2">
+								<button
+									onClick={selectAllSheets}
+									className="px-3 py-1 text-sm border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-50 dark:hover:bg-gray-700"
+								>
+									{selectedSheets.length === pendingSheets.length
+										? "Deselect All"
+										: "Select All"}
+								</button>
+								{selectedSheets.length > 0 && (
+									<>
+										<button
+											onClick={handleBulkApprove}
+											className="px-3 py-1 text-sm bg-green-600 text-white rounded hover:bg-green-700 flex items-center gap-1"
+										>
+											<CheckCircle className="h-4 w-4" />
+											Approve ({selectedSheets.length})
+										</button>
+										<button
+											onClick={handleBulkReject}
+											className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 flex items-center gap-1"
+										>
+											<XCircle className="h-4 w-4" />
+											Reject ({selectedSheets.length})
+										</button>
+									</>
+								)}
+							</div>
+						</div>
 						<div className="space-y-4">
 							{pendingSheets.map((sheet) => (
 								<div
@@ -188,45 +315,54 @@ const AdminDashboard = () => {
 									className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
 								>
 									<div className="flex justify-between items-start">
-										<div className="flex-1">
-											<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-												{sheet.name}
-											</h3>
-											<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-												{sheet.description}
-											</p>
-											<div className="mt-2 flex items-center gap-4 text-sm">
-												<span className="text-gray-600 dark:text-gray-400">
-													Created by:{" "}
-													<strong>{sheet.userId?.name || "Unknown"}</strong> (@
-													{sheet.userId?.username})
-												</span>
-												<span className="text-gray-600 dark:text-gray-400">
-													Category: <strong>{sheet.category}</strong>
-												</span>
-												<span className="text-gray-600 dark:text-gray-400">
-													Problems:{" "}
-													<strong>{sheet.problems?.length || 0}</strong>
-												</span>
-											</div>
-											{sheet.tags && sheet.tags.length > 0 && (
-												<div className="mt-2 flex flex-wrap gap-2">
-													{sheet.tags.map((tag, idx) => (
-														<span
-															key={idx}
-															className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"
-														>
-															{tag}
-														</span>
-													))}
+										<div className="flex items-start gap-3 flex-1">
+											<input
+												type="checkbox"
+												checked={selectedSheets.includes(sheet._id)}
+												onChange={() => toggleSheetSelection(sheet._id)}
+												className="mt-1 h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded"
+											/>
+											<div className="flex-1">
+												<h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+													{sheet.name}
+												</h3>
+												<p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+													{sheet.description}
+												</p>
+												<div className="mt-2 flex items-center gap-4 text-sm">
+													<span className="text-gray-600 dark:text-gray-400">
+														Created by:{" "}
+														<strong>{sheet.userId?.name || "Unknown"}</strong>{" "}
+														(@
+														{sheet.userId?.username})
+													</span>
+													<span className="text-gray-600 dark:text-gray-400">
+														Category: <strong>{sheet.category}</strong>
+													</span>
+													<span className="text-gray-600 dark:text-gray-400">
+														Problems:{" "}
+														<strong>{sheet.problems?.length || 0}</strong>
+													</span>
 												</div>
-											)}
-											<p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
-												Requested:{" "}
-												{new Date(
-													sheet.approvalRequestedAt
-												).toLocaleDateString()}
-											</p>
+												{sheet.tags && sheet.tags.length > 0 && (
+													<div className="mt-2 flex flex-wrap gap-2">
+														{sheet.tags.map((tag, idx) => (
+															<span
+																key={idx}
+																className="px-2 py-1 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"
+															>
+																{tag}
+															</span>
+														))}
+													</div>
+												)}
+												<p className="text-xs text-gray-500 dark:text-gray-500 mt-2">
+													Requested:{" "}
+													{new Date(
+														sheet.approvalRequestedAt
+													).toLocaleDateString()}
+												</p>
+											</div>
 										</div>
 										<div className="flex gap-2 ml-4">
 											<Link
@@ -313,6 +449,214 @@ const AdminDashboard = () => {
 						</div>
 					</div>
 				</div>
+
+				{/* Analytics Section */}
+				{analytics && (
+					<>
+						{/* User Analytics */}
+						<div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+							<h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+								<BarChart3 className="h-5 w-5" />
+								User Analytics (DAU/MAU)
+							</h2>
+							<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+								<div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+									<p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+										{analytics.users.dau}
+									</p>
+									<p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+										Daily Active Users
+									</p>
+								</div>
+								<div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+									<p className="text-2xl font-bold text-green-600 dark:text-green-400">
+										{analytics.users.wau}
+									</p>
+									<p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+										Weekly Active Users
+									</p>
+								</div>
+								<div className="text-center p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+									<p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+										{analytics.users.mau}
+									</p>
+									<p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+										Monthly Active Users
+									</p>
+								</div>
+								<div className="text-center p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+									<p className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+										{analytics.users.activeUsersPercent}%
+									</p>
+									<p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+										Active Today
+									</p>
+								</div>
+							</div>
+							<div className="mt-4 grid grid-cols-3 gap-4">
+								<div className="text-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+									<p className="text-lg font-semibold text-gray-900 dark:text-white">
+										{analytics.users.newUsersToday}
+									</p>
+									<p className="text-xs text-gray-600 dark:text-gray-400">
+										New Today
+									</p>
+								</div>
+								<div className="text-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+									<p className="text-lg font-semibold text-gray-900 dark:text-white">
+										{analytics.users.newUsersWeek}
+									</p>
+									<p className="text-xs text-gray-600 dark:text-gray-400">
+										New This Week
+									</p>
+								</div>
+								<div className="text-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+									<p className="text-lg font-semibold text-gray-900 dark:text-white">
+										{analytics.users.newUsersMonth}
+									</p>
+									<p className="text-xs text-gray-600 dark:text-gray-400">
+										New This Month
+									</p>
+								</div>
+							</div>
+							{analytics.users.bannedUsers > 0 && (
+								<div className="mt-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+									<p className="text-sm text-red-800 dark:text-red-200">
+										⚠️ <strong>{analytics.users.bannedUsers}</strong> banned
+										user(s)
+									</p>
+								</div>
+							)}
+						</div>
+
+						{/* Content Analytics */}
+						<div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+							<h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+								Popular Content
+							</h2>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+								{/* Popular Problems */}
+								<div>
+									<h3 className="text-md font-medium text-gray-900 dark:text-white mb-3">
+										Most Solved Problems
+									</h3>
+									{analytics.content.popularProblems.length > 0 ? (
+										<div className="space-y-2">
+											{analytics.content.popularProblems
+												.slice(0, 5)
+												.map((problem, idx) => (
+													<div
+														key={idx}
+														className="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded"
+													>
+														<div className="flex-1 min-w-0">
+															<p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+																{idx + 1}. {problem.title}
+															</p>
+															<p className="text-xs text-gray-500">
+																{problem.platform} • {problem.difficulty}
+															</p>
+														</div>
+														<span className="ml-2 text-sm font-semibold text-primary-600">
+															{problem.solveCount}
+														</span>
+													</div>
+												))}
+										</div>
+									) : (
+										<p className="text-sm text-gray-500 dark:text-gray-400">
+											No data available
+										</p>
+									)}
+								</div>
+
+								{/* Popular Sheets */}
+								<div>
+									<h3 className="text-md font-medium text-gray-900 dark:text-white mb-3">
+										Most Popular Sheets
+									</h3>
+									{analytics.content.popularSheets.length > 0 ? (
+										<div className="space-y-2">
+											{analytics.content.popularSheets
+												.slice(0, 5)
+												.map((sheet, idx) => (
+													<div
+														key={idx}
+														className="flex items-center justify-between p-2 border border-gray-200 dark:border-gray-700 rounded"
+													>
+														<div className="flex-1 min-w-0">
+															<p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+																{idx + 1}. {sheet.name}
+															</p>
+															<p className="text-xs text-gray-500">
+																{sheet.problemCount} problems • {sheet.category}
+															</p>
+														</div>
+														<span className="ml-2 text-sm font-semibold text-green-600">
+															{sheet.userCount} users
+														</span>
+													</div>
+												))}
+										</div>
+									) : (
+										<p className="text-sm text-gray-500 dark:text-gray-400">
+											No data available
+										</p>
+									)}
+								</div>
+							</div>
+						</div>
+					</>
+				)}
+
+				{/* Server Health */}
+				{serverHealth && (
+					<div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+						<h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+							<Activity className="h-5 w-5 text-green-600" />
+							Server Health
+						</h2>
+						<div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+							<div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+								<p className="text-xs text-gray-600 dark:text-gray-400">
+									Uptime
+								</p>
+								<p className="text-lg font-semibold text-gray-900 dark:text-white">
+									{Math.floor(serverHealth.server.uptime / 3600)}h{" "}
+									{Math.floor((serverHealth.server.uptime % 3600) / 60)}m
+								</p>
+							</div>
+							<div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+								<p className="text-xs text-gray-600 dark:text-gray-400">
+									Memory Used
+								</p>
+								<p className="text-lg font-semibold text-gray-900 dark:text-white">
+									{(
+										serverHealth.server.memory.processHeap /
+										(1024 * 1024)
+									).toFixed(0)}{" "}
+									MB
+								</p>
+							</div>
+							<div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+								<p className="text-xs text-gray-600 dark:text-gray-400">
+									DB Status
+								</p>
+								<p className="text-lg font-semibold text-green-600">
+									{serverHealth.database.status}
+								</p>
+							</div>
+							<div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
+								<p className="text-xs text-gray-600 dark:text-gray-400">
+									Node Version
+								</p>
+								<p className="text-lg font-semibold text-gray-900 dark:text-white">
+									{serverHealth.server.nodeVersion}
+								</p>
+							</div>
+						</div>
+					</div>
+				)}
 
 				{/* User Info */}
 				<div className="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">

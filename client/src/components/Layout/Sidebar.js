@@ -11,6 +11,8 @@ import {
 	BarChart3,
 	Trophy,
 	Award,
+	Users,
+	Shield,
 } from "lucide-react";
 import { cn } from "../../utils/helpers";
 import api from "../../utils/api";
@@ -37,6 +39,38 @@ const Sidebar = () => {
 
 	const stats = dashboardData?.stats || {};
 
+	// Check if user is admin
+	const isAdmin = user?.username === "admin" || user?.role === "admin";
+
+	// Admin navigation
+	const adminNavigation = [
+		{
+			name: "Dashboard",
+			href: "/admin",
+			icon: LayoutDashboard,
+			current: location.pathname === "/admin",
+		},
+		{
+			name: "User Management",
+			href: "/admin/users",
+			icon: Users,
+			current: location.pathname.startsWith("/admin/users"),
+		},
+		{
+			name: "Global Sheets",
+			href: "/admin/sheets",
+			icon: FileText,
+			current: location.pathname.startsWith("/admin/sheets"),
+		},
+		{
+			name: "Global Problems",
+			href: "/admin/problems",
+			icon: Code2,
+			current: location.pathname.startsWith("/admin/problems"),
+		},
+	];
+
+	// Regular user navigation
 	const navigation = [
 		{
 			name: "Dashboard",
@@ -82,6 +116,9 @@ const Sidebar = () => {
 		},
 	];
 
+	// Use appropriate navigation based on user role
+	const navItems = isAdmin ? adminNavigation : navigation;
+
 	const quickStats = [
 		{
 			name: "Problems Solved",
@@ -102,9 +139,21 @@ const Sidebar = () => {
 			{/* Desktop sidebar */}
 			<aside className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 lg:translate-x-0">
 				<div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
+					{/* Admin Badge */}
+					{isAdmin && (
+						<div className="mb-4 p-2 bg-primary-50 dark:bg-primary-900/30 rounded-lg border border-primary-200 dark:border-primary-800">
+							<div className="flex items-center gap-2">
+								<Shield className="w-4 h-4 text-primary-600 dark:text-primary-400" />
+								<span className="text-xs font-semibold text-primary-700 dark:text-primary-300">
+									Admin Panel
+								</span>
+							</div>
+						</div>
+					)}
+
 					{/* Navigation */}
 					<ul className="space-y-2 font-medium">
-						{navigation.map((item) => {
+						{navItems.map((item) => {
 							const Icon = item.icon;
 							return (
 								<li key={item.name}>
