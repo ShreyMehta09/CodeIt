@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useQuery } from 'react-query';
 import { 
   LayoutDashboard, 
   Code2, 
@@ -11,9 +12,29 @@ import {
   Trophy
 } from 'lucide-react';
 import { cn } from '../../utils/helpers';
+import api from '../../utils/api';
+import { useAuth } from '../../contexts/AuthContext';
 
 const Sidebar = () => {
   const location = useLocation();
+  const { user } = useAuth();
+
+  // Fetch dashboard data for quick stats
+  const { data: dashboardData } = useQuery(
+    'dashboard',
+    async () => {
+      const response = await api.get('/dashboard');
+      return response.data;
+    },
+    {
+      staleTime: 30 * 1000, // 30 seconds
+      cacheTime: 5 * 60 * 1000, // 5 minutes
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+    }
+  );
+
+  const stats = dashboardData?.stats || {};
 
   const navigation = [
     {
@@ -55,8 +76,18 @@ const Sidebar = () => {
   ];
 
   const quickStats = [
-    { name: 'Problems Solved', value: '142', icon: Trophy, color: 'text-success-600' },
-    { name: 'Current Streak', value: '7', icon: BarChart3, color: 'text-primary-600' },
+    { 
+      name: 'Problems Solved', 
+      value: stats.solvedCount || '0', 
+      icon: Trophy, 
+      color: 'text-success-600 dark:text-success-400' 
+    },
+    { 
+      name: 'Current Streak', 
+      value: user?.stats?.currentStreak || '0', 
+      icon: BarChart3, 
+      color: 'text-primary-600 dark:text-primary-400' 
+    },
   ];
 
   return (
@@ -88,19 +119,19 @@ const Sidebar = () => {
           </ul>
 
           {/* Quick Stats */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               Quick Stats
             </h3>
             <div className="space-y-3">
               {quickStats.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={stat.name} className="flex items-center p-2 rounded-lg bg-gray-50">
+                  <div key={stat.name} className="flex items-center p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
                     <Icon className={cn('w-4 h-4', stat.color)} />
                     <div className="ml-3">
-                      <div className="text-sm font-medium text-gray-900">{stat.value}</div>
-                      <div className="text-xs text-gray-500">{stat.name}</div>
+                      <div className="text-sm font-medium text-gray-900 dark:text-white">{stat.value}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">{stat.name}</div>
                     </div>
                   </div>
                 );
@@ -109,19 +140,25 @@ const Sidebar = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="mt-8 pt-8 border-t border-gray-200">
-            <h3 className="px-2 text-xs font-semibold text-gray-500 uppercase tracking-wider mb-4">
+          <div className="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <h3 className="px-2 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">
               Recent Activity
             </h3>
             <div className="space-y-2">
-              <div className="p-2 rounded-lg bg-gray-50">
-                <div className="text-sm font-medium text-gray-900">Two Sum</div>
-                <div className="text-xs text-gray-500">Solved • LeetCode</div>
-              </div>
-              <div className="p-2 rounded-lg bg-gray-50">
-                <div className="text-sm font-medium text-gray-900">Binary Search</div>
-                <div className="text-xs text-gray-500">Solved • LeetCode</div>
-              </div>
+              {dashboardData?.recentActivity && dashboardData.recentActivity.length > 0 ? (
+                dashboardData.recentActivity.slice(0, 2).map((activity, index) => (
+                  <div key={index} className="p-2 rounded-lg bg-gray-50 dark:bg-gray-700">
+                    <div className="text-sm font-medium text-gray-900 dark:text-white truncate">{activity.title}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">
+                      Solved • {activity.platform}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-2 text-center">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">No recent activity</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
