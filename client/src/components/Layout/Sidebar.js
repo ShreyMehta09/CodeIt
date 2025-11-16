@@ -10,6 +10,7 @@ import {
 	Link as LinkIcon,
 	BarChart3,
 	Trophy,
+	Award,
 } from "lucide-react";
 import { cn } from "../../utils/helpers";
 import api from "../../utils/api";
@@ -56,6 +57,12 @@ const Sidebar = () => {
 			current: location.pathname.startsWith("/sheets"),
 		},
 		{
+			name: "Contests",
+			href: "/contests",
+			icon: Trophy,
+			current: location.pathname === "/contests",
+		},
+		{
 			name: "Profile",
 			href: "/profile",
 			icon: User,
@@ -79,7 +86,7 @@ const Sidebar = () => {
 		{
 			name: "Problems Solved",
 			value: stats.solvedCount || "0",
-			icon: Trophy,
+			icon: Award,
 			color: "text-success-600 dark:text-success-400",
 		},
 		{

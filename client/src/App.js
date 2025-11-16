@@ -16,6 +16,7 @@ import PublicProfile from './pages/PublicProfile';
 import Settings from './pages/Settings';
 import Integrations from './pages/Integrations';
 import IntegrationTest from './pages/IntegrationTest';
+import Contests from './pages/Contests';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import AuthSuccess from './pages/Auth/AuthSuccess';
@@ -80,6 +81,7 @@ function App() {
           <Route path="problems" element={<Problems />} />
           <Route path="sheets" element={<Sheets />} />
           <Route path="sheets/:id" element={<SheetDetail />} />
+          <Route path="contests" element={<Contests />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
           <Route path="integrations" element={<Integrations />} />
