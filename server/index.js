@@ -18,6 +18,7 @@ const settingsRoutes = require("./routes/settings");
 const profileRoutes = require("./routes/profile");
 const adminRoutes = require("./routes/admin");
 const publicRoutes = require("./routes/public");
+const courseRoutes = require("./routes/courses");
 
 // Import passport config
 require("./config/passport");
@@ -127,6 +128,7 @@ app.use("/api/settings", settingsRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/public", publicRoutes);
+app.use("/api/courses", courseRoutes);
 
 // Health check endpoint
 app.get("/api/health", (req, res) => {

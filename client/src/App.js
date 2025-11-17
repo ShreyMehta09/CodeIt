@@ -16,6 +16,9 @@ import PublicProfile from "./pages/PublicProfile";
 import Settings from "./pages/Settings";
 import Integrations from "./pages/Integrations";
 import Contests from "./pages/Contests";
+import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
+import CoursePlayer from "./pages/CoursePlayer";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
 import VerifyEmail from "./pages/Auth/VerifyEmail";
@@ -27,6 +30,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminSheets from "./pages/AdminSheets";
 import AdminProblems from "./pages/AdminProblems";
 import AdminUsers from "./pages/AdminUsers";
+import AdminCourses from "./pages/AdminCourses";
 
 // Components
 import LoadingSpinner from "./components/UI/LoadingSpinner";
@@ -63,7 +67,6 @@ function App() {
 					}
 				/>
 				<Route path="/profile/:username" element={<PublicProfile />} />
-
 				{/* Auth Routes */}
 				<Route path="/auth" element={<AuthLayout />}>
 					<Route
@@ -93,7 +96,6 @@ function App() {
 					<Route path="verify-email" element={<VerifyEmail />} />
 					<Route path="success" element={<AuthSuccess />} />
 				</Route>
-
 				{/* Protected Routes */}
 				<Route
 					path="/"
@@ -107,12 +109,14 @@ function App() {
 					<Route path="problems" element={<Problems />} />
 					<Route path="sheets" element={<Sheets />} />
 					<Route path="sheets/:id" element={<SheetDetail />} />
+					<Route path="courses" element={<Courses />} />
+					<Route path="courses/:id" element={<CourseDetail />} />
+					<Route path="courses/:id/learn" element={<CoursePlayer />} />
 					<Route path="contests" element={<Contests />} />
 					<Route path="profile" element={<Profile />} />
 					<Route path="settings" element={<Settings />} />
 					<Route path="integrations" element={<Integrations />} />
-				</Route>
-
+				</Route>{" "}
 				{/* Admin Routes - Separate protection */}
 				<Route
 					path="/admin"
@@ -128,8 +132,8 @@ function App() {
 					<Route path="sheets" element={<AdminSheets />} />
 					<Route path="problems" element={<AdminProblems />} />
 					<Route path="users" element={<AdminUsers />} />
-				</Route>
-
+					<Route path="courses" element={<AdminCourses />} />
+				</Route>{" "}
 				{/* 404 Route */}
 				<Route
 					path="*"

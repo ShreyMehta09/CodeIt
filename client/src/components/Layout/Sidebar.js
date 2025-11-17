@@ -13,6 +13,7 @@ import {
 	Award,
 	Users,
 	Shield,
+	GraduationCap,
 } from "lucide-react";
 import { cn } from "../../utils/helpers";
 import api from "../../utils/api";
@@ -68,6 +69,12 @@ const Sidebar = () => {
 			icon: Code2,
 			current: location.pathname.startsWith("/admin/problems"),
 		},
+		{
+			name: "Courses",
+			href: "/admin/courses",
+			icon: GraduationCap,
+			current: location.pathname.startsWith("/admin/courses"),
+		},
 	];
 
 	// Regular user navigation
@@ -89,6 +96,12 @@ const Sidebar = () => {
 			href: "/sheets",
 			icon: FileText,
 			current: location.pathname.startsWith("/sheets"),
+		},
+		{
+			name: "Courses",
+			href: "/courses",
+			icon: GraduationCap,
+			current: location.pathname.startsWith("/courses"),
 		},
 		{
 			name: "Contests",

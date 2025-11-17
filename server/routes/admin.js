@@ -4,6 +4,8 @@ const { requireAdmin } = require("../middleware/adminAuth");
 const User = require("../models/User");
 const Sheet = require("../models/Sheet");
 const Problem = require("../models/Problem");
+const Course = require("../models/Course");
+const Enrollment = require("../models/Enrollment");
 const multer = require("multer");
 const csv = require("csv-parser");
 const XLSX = require("xlsx");
@@ -1057,6 +1059,317 @@ router.get("/analytics/health", requireAdmin, async (req, res) => {
 		});
 	} catch (error) {
 		console.error("Error fetching server health:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// ===== COURSE MANAGEMENT ROUTES =====
+
+// Get all courses (admin view with unpublished)
+router.get("/courses", requireAdmin, async (req, res) => {
+	try {
+		const courses = await Course.find({})
+			.populate("createdBy", "name username")
+			.sort({ createdAt: -1 });
+
+		res.json(courses);
+	} catch (error) {
+		console.error("Error fetching courses:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// Create new course
+router.post("/courses", requireAdmin, async (req, res) => {
+	try {
+		const {
+			title,
+			description,
+			instructor,
+			thumbnail,
+			price,
+			currency,
+			level,
+			tags,
+			modules,
+		} = req.body;
+
+		if (!title || !description || !price) {
+			return res
+				.status(400)
+				.json({ message: "Title, description, and price are required" });
+		}
+
+		if (!modules || modules.length === 0) {
+			return res
+				.status(400)
+				.json({ message: "At least one module is required" });
+		}
+
+		// Clean up modules - remove empty problemId for non-problem types
+		const cleanedModules = modules.map((module) => {
+			const cleaned = { ...module };
+			// Only keep problemId if contentType is 'problem' and it's not empty
+			if (module.contentType !== "problem" || !module.problemId) {
+				delete cleaned.problemId;
+			}
+			return cleaned;
+		});
+
+		const course = new Course({
+			title,
+			description,
+			instructor: instructor || "Admin",
+			thumbnail,
+			price,
+			currency: currency || "INR",
+			level: level || "Beginner",
+			tags: tags || [],
+			modules: cleanedModules,
+			createdBy: req.user._id,
+			isPublished: false,
+		});
+
+		await course.save();
+		await course.populate("createdBy", "name username");
+
+		res.status(201).json({
+			message: "Course created successfully",
+			course,
+		});
+	} catch (error) {
+		console.error("Error creating course:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// Get single course (admin view)
+router.get("/courses/:id", requireAdmin, async (req, res) => {
+	try {
+		const course = await Course.findById(req.params.id).populate(
+			"createdBy",
+			"name username"
+		);
+
+		if (!course) {
+			return res.status(404).json({ message: "Course not found" });
+		}
+
+		// Get enrollment stats
+		const enrollmentCount = await Enrollment.countDocuments({
+			courseId: course._id,
+		});
+		const completionCount = await Enrollment.countDocuments({
+			courseId: course._id,
+			isCompleted: true,
+		});
+
+		res.json({
+			...course.toObject(),
+			stats: {
+				enrollmentCount,
+				completionCount,
+				completionRate:
+					enrollmentCount > 0
+						? ((completionCount / enrollmentCount) * 100).toFixed(2)
+						: 0,
+			},
+		});
+	} catch (error) {
+		console.error("Error fetching course:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// Update course
+router.put("/courses/:id", requireAdmin, async (req, res) => {
+	try {
+		const {
+			title,
+			description,
+			instructor,
+			thumbnail,
+			price,
+			currency,
+			level,
+			tags,
+			modules,
+			isPublished,
+		} = req.body;
+
+		const course = await Course.findById(req.params.id);
+
+		if (!course) {
+			return res.status(404).json({ message: "Course not found" });
+		}
+
+		// Update fields
+		if (title) course.title = title;
+		if (description) course.description = description;
+		if (instructor) course.instructor = instructor;
+		if (thumbnail) course.thumbnail = thumbnail;
+		if (price !== undefined) course.price = price;
+		if (currency) course.currency = currency;
+		if (level) course.level = level;
+		if (tags) course.tags = tags;
+		if (modules) {
+			// Clean up modules - remove empty problemId for non-problem types
+			const cleanedModules = modules.map((module) => {
+				const cleaned = { ...module };
+				// Only keep problemId if contentType is 'problem' and it's not empty
+				if (module.contentType !== "problem" || !module.problemId) {
+					delete cleaned.problemId;
+				}
+				return cleaned;
+			});
+			course.modules = cleanedModules;
+		}
+		if (isPublished !== undefined) course.isPublished = isPublished;
+
+		await course.save();
+		await course.populate("createdBy", "name username");
+
+		res.json({
+			message: "Course updated successfully",
+			course,
+		});
+	} catch (error) {
+		console.error("Error updating course:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// Delete course
+router.delete("/courses/:id", requireAdmin, async (req, res) => {
+	try {
+		const course = await Course.findById(req.params.id);
+
+		if (!course) {
+			return res.status(404).json({ message: "Course not found" });
+		}
+
+		// Check if any enrollments exist
+		const enrollmentCount = await Enrollment.countDocuments({
+			courseId: course._id,
+		});
+
+		if (enrollmentCount > 0) {
+			return res.status(400).json({
+				message: `Cannot delete course with ${enrollmentCount} active enrollment(s). Consider unpublishing instead.`,
+			});
+		}
+
+		await Course.findByIdAndDelete(req.params.id);
+
+		res.json({ message: "Course deleted successfully" });
+	} catch (error) {
+		console.error("Error deleting course:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// Toggle course publish status
+router.patch("/courses/:id/publish", requireAdmin, async (req, res) => {
+	try {
+		const course = await Course.findById(req.params.id);
+
+		if (!course) {
+			return res.status(404).json({ message: "Course not found" });
+		}
+
+		course.isPublished = !course.isPublished;
+		await course.save();
+
+		res.json({
+			message: `Course ${
+				course.isPublished ? "published" : "unpublished"
+			} successfully`,
+			isPublished: course.isPublished,
+		});
+	} catch (error) {
+		console.error("Error toggling publish status:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// Get course enrollments
+router.get("/courses/:id/enrollments", requireAdmin, async (req, res) => {
+	try {
+		const enrollments = await Enrollment.find({
+			courseId: req.params.id,
+		})
+			.populate("userId", "name email username")
+			.sort({ enrolledAt: -1 });
+
+		res.json(enrollments);
+	} catch (error) {
+		console.error("Error fetching enrollments:", error);
+		res.status(500).json({ message: "Server error" });
+	}
+});
+
+// Get course analytics
+router.get("/courses/:id/analytics", requireAdmin, async (req, res) => {
+	try {
+		const course = await Course.findById(req.params.id);
+
+		if (!course) {
+			return res.status(404).json({ message: "Course not found" });
+		}
+
+		const enrollments = await Enrollment.find({ courseId: course._id });
+
+		// Calculate analytics
+		const totalEnrollments = enrollments.length;
+		const completedEnrollments = enrollments.filter(
+			(e) => e.isCompleted
+		).length;
+		const totalRevenue = enrollments.reduce((sum, e) => sum + e.amountPaid, 0);
+		const avgProgress =
+			enrollments.length > 0
+				? enrollments.reduce((sum, e) => sum + e.progress, 0) /
+				  enrollments.length
+				: 0;
+
+		// Module completion stats
+		const moduleStats = course.modules.map((module) => {
+			const completions = enrollments.filter((e) =>
+				e.moduleProgress.find(
+					(m) => m.moduleId.toString() === module._id.toString() && m.completed
+				)
+			).length;
+
+			return {
+				moduleId: module._id,
+				title: module.title,
+				completions,
+				completionRate:
+					totalEnrollments > 0
+						? ((completions / totalEnrollments) * 100).toFixed(2)
+						: 0,
+			};
+		});
+
+		// Enrollment trend (last 30 days)
+		const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+		const recentEnrollments = enrollments.filter(
+			(e) => e.enrolledAt >= thirtyDaysAgo
+		);
+
+		res.json({
+			totalEnrollments,
+			completedEnrollments,
+			completionRate:
+				totalEnrollments > 0
+					? ((completedEnrollments / totalEnrollments) * 100).toFixed(2)
+					: 0,
+			totalRevenue,
+			avgProgress: avgProgress.toFixed(2),
+			moduleStats,
+			recentEnrollments: recentEnrollments.length,
+		});
+	} catch (error) {
+		console.error("Error fetching course analytics:", error);
 		res.status(500).json({ message: "Server error" });
 	}
 });
