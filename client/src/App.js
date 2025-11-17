@@ -15,10 +15,10 @@ import Profile from "./pages/Profile";
 import PublicProfile from "./pages/PublicProfile";
 import Settings from "./pages/Settings";
 import Integrations from "./pages/Integrations";
-import IntegrationTest from "./pages/IntegrationTest";
 import Contests from "./pages/Contests";
 import Login from "./pages/Auth/Login";
 import Register from "./pages/Auth/Register";
+import VerifyEmail from "./pages/Auth/VerifyEmail";
 import AuthSuccess from "./pages/Auth/AuthSuccess";
 import Landing from "./pages/Landing";
 
@@ -90,6 +90,7 @@ function App() {
 							)
 						}
 					/>
+					<Route path="verify-email" element={<VerifyEmail />} />
 					<Route path="success" element={<AuthSuccess />} />
 				</Route>
 
@@ -110,7 +111,6 @@ function App() {
 					<Route path="profile" element={<Profile />} />
 					<Route path="settings" element={<Settings />} />
 					<Route path="integrations" element={<Integrations />} />
-					<Route path="integration-test" element={<IntegrationTest />} />
 				</Route>
 
 				{/* Admin Routes - Separate protection */}

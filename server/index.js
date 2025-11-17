@@ -8,6 +8,7 @@ require("dotenv").config();
 
 // Import routes
 const authRoutes = require("./routes/auth");
+const otpRoutes = require("./routes/otp");
 const userRoutes = require("./routes/users");
 const problemRoutes = require("./routes/problems");
 const sheetRoutes = require("./routes/sheets");
@@ -116,6 +117,7 @@ process.on("SIGINT", async () => {
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/otp", otpRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/sheets", sheetRoutes);

@@ -7,30 +7,36 @@ A full-stack web application for tracking competitive programming progress acros
 ### MVP Features (Implemented)
 
 1. **Authentication & User Management**
-   - Email/password authentication
-   - Google OAuth integration
+
+   - Email/password authentication with OTP verification
+   - Google OAuth integration (skips OTP verification)
    - User profile management
    - Public/private profile settings
+   - Email verification system
 
 2. **Dashboard**
+
    - Comprehensive statistics overview
    - Recent activity feed
    - Progress tracking
    - Quick action shortcuts
 
 3. **Problem Tracker**
+
    - Add problems from multiple platforms
    - Status tracking (Todo, Solved, Attempted, Review)
    - Difficulty and tag-based filtering
    - Notes and solution storage
 
 4. **Sheet Management**
+
    - Create custom problem collections
    - Progress tracking per sheet
    - Public/private sheet sharing
    - Template sheets support
 
 5. **Platform Integrations**
+
    - LeetCode sync
    - Codeforces sync
    - GitHub integration
@@ -45,16 +51,19 @@ A full-stack web application for tracking competitive programming progress acros
 ## Tech Stack
 
 ### Backend
+
 - **Node.js** - Runtime environment
 - **Express.js** - Web framework
 - **MongoDB** - Database
 - **Mongoose** - ODM
 - **JWT** - Authentication
 - **Passport.js** - OAuth integration
+- **Nodemailer** - Email sending for OTP verification
 - **Axios** - HTTP client for API calls
 - **Node-cron** - Background job scheduling
 
 ### Frontend
+
 - **React.js** - UI framework
 - **React Router** - Client-side routing
 - **React Query** - Data fetching and caching
@@ -88,17 +97,20 @@ CodeIt/
 ## Installation & Setup
 
 ### Prerequisites
+
 - Node.js (v16 or higher)
 - MongoDB (local or cloud instance)
 - Git
 
 ### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd CodeIt
 ```
 
 ### 2. Install Dependencies
+
 ```bash
 # Install root dependencies
 npm install
@@ -113,6 +125,7 @@ npm run install-client
 ### 3. Environment Setup
 
 #### Server Environment (.env)
+
 Create a `.env` file in the `server` directory:
 
 ```env
@@ -120,6 +133,10 @@ PORT=5000
 MONGODB_URI=mongodb://localhost:27017/CodeIt
 JWT_SECRET=your-super-secret-jwt-key-here
 JWT_EXPIRE=7d
+
+# Email Configuration (Required for OTP verification)
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASSWORD=your-gmail-app-password
 
 # Google OAuth (Optional)
 GOOGLE_CLIENT_ID=your-google-client-id
@@ -132,7 +149,10 @@ CLIENT_URL=http://localhost:3000
 GITHUB_TOKEN=your-github-token
 ```
 
+> **📧 Email Setup:** See [EMAIL_SETUP.md](./EMAIL_SETUP.md) for detailed instructions on configuring Gmail App Password for OTP verification.
+
 #### Client Environment (.env)
+
 Create a `.env` file in the `client` directory:
 
 ```env
@@ -144,6 +164,7 @@ REACT_APP_API_URL=http://localhost:5000/api
 Make sure MongoDB is running on your system. The application will automatically create the necessary collections.
 
 For MongoDB Atlas (cloud):
+
 1. Create a cluster at [MongoDB Atlas](https://www.mongodb.com/atlas)
 2. Get your connection string
 3. Replace `MONGODB_URI` in your `.env` file
@@ -161,6 +182,7 @@ For MongoDB Atlas (cloud):
 ### 6. Start the Application
 
 #### Development Mode
+
 ```bash
 # Start both server and client concurrently
 npm run dev
@@ -174,6 +196,7 @@ npm run client
 ```
 
 #### Production Mode
+
 ```bash
 # Build client
 npm run build
@@ -191,6 +214,7 @@ npm start
 ## API Endpoints
 
 ### Authentication
+
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/auth/google` - Google OAuth
@@ -198,28 +222,33 @@ npm start
 - `PUT /api/auth/profile` - Update profile
 
 ### Problems
+
 - `GET /api/problems` - Get user problems
 - `POST /api/problems` - Add new problem
 - `PUT /api/problems/:id` - Update problem
 - `DELETE /api/problems/:id` - Delete problem
 
 ### Sheets
+
 - `GET /api/sheets` - Get user sheets
 - `POST /api/sheets` - Create new sheet
 - `GET /api/sheets/:id` - Get sheet details
 - `PUT /api/sheets/:id` - Update sheet
 
 ### Integrations
+
 - `POST /api/integrations/sync/:platform` - Sync platform data
 - `GET /api/integrations/status` - Get integration status
 
 ### Dashboard
+
 - `GET /api/dashboard` - Get dashboard data
 - `GET /api/dashboard/analytics` - Get detailed analytics
 
 ## Features in Detail
 
 ### Problem Tracking
+
 - Add problems manually or import from platforms
 - Track solving status and attempts
 - Add personal notes and solutions
@@ -227,6 +256,7 @@ npm start
 - Filter and search functionality
 
 ### Sheet Management
+
 - Create custom problem collections
 - Track progress per sheet
 - Share sheets publicly
@@ -234,12 +264,14 @@ npm start
 - Template sheets for common patterns
 
 ### Platform Integration
+
 - **LeetCode**: Sync solved problems and statistics
 - **Codeforces**: Import contest history and ratings
 - **GitHub**: Showcase repositories and contributions
 - **Automated Sync**: Background jobs update data regularly
 
 ### Analytics & Insights
+
 - Solving patterns and trends
 - Difficulty progression tracking
 - Platform-wise statistics
@@ -249,13 +281,16 @@ npm start
 ## Customization
 
 ### Adding New Platforms
+
 1. Add platform configuration in `server/models/User.js`
 2. Implement sync logic in `server/routes/integrations.js`
 3. Add platform colors in `client/src/utils/helpers.js`
 4. Update UI components to display new platform
 
 ### Styling
+
 The application uses Tailwind CSS for styling. Customize:
+
 - Colors in `client/tailwind.config.js`
 - Component styles in `client/src/index.css`
 - Theme variables for consistent branding
@@ -263,16 +298,19 @@ The application uses Tailwind CSS for styling. Customize:
 ## Deployment
 
 ### Backend Deployment (Heroku/Railway/DigitalOcean)
+
 1. Set environment variables
 2. Ensure MongoDB connection
 3. Deploy using platform-specific instructions
 
 ### Frontend Deployment (Vercel/Netlify)
+
 1. Build the React app: `npm run build`
 2. Deploy the `build` folder
 3. Set environment variables for API URL
 
 ### Full-Stack Deployment (Docker)
+
 ```dockerfile
 # Example Dockerfile for full-stack deployment
 FROM node:16-alpine
@@ -298,16 +336,19 @@ CMD ["npm", "start"]
 ### Common Issues
 
 1. **MongoDB Connection Error**
+
    - Ensure MongoDB is running
    - Check connection string in `.env`
    - Verify network access for cloud databases
 
 2. **Google OAuth Not Working**
+
    - Verify client ID and secret
    - Check authorized redirect URIs
    - Ensure Google+ API is enabled
 
 3. **CORS Issues**
+
    - Check `CLIENT_URL` in server `.env`
    - Verify CORS configuration in `server/index.js`
 
