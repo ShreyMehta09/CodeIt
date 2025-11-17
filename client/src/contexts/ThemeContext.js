@@ -12,7 +12,7 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('auto');
+  const [theme, setTheme] = useState('light'); // Default to light theme
   const [resolvedTheme, setResolvedTheme] = useState('light');
   const { user } = useAuth();
 
@@ -21,7 +21,7 @@ export const ThemeProvider = ({ children }) => {
     if (user?.settings?.theme) {
       setTheme(user.settings.theme);
     } else {
-      const savedTheme = localStorage.getItem('theme') || 'auto';
+      const savedTheme = localStorage.getItem('theme') || 'light'; // Default to light
       setTheme(savedTheme);
     }
   }, [user]);
